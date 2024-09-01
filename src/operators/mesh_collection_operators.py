@@ -73,13 +73,13 @@ class RemoveMeshOperator(bpy.types.Operator):
         return {"FINISHED"}
 
 
-def register():
+def mesh_collection_register():
     bpy.utils.register_class(AddMeshOperator)
     bpy.utils.register_class(SelectMeshOperator)
     bpy.utils.register_class(RemoveMeshOperator)
 
 
-def unregister():
+def mesh_collection_unregister():
     bpy.utils.unregister_class(AddMeshOperator)
     bpy.utils.unregister_class(SelectMeshOperator)
     bpy.utils.unregister_class(RemoveMeshOperator)

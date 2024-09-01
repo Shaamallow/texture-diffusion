@@ -16,6 +16,7 @@ if "bpy" in locals():
 
     importlib.reload(properties)
     importlib.reload(panels)
+    importlib.reload(operators)
 
 else:
     from .src import panels, properties, operators

@@ -75,10 +75,20 @@ class GenerateDiffusionOperator(bpy.types.Operator):
 
         return
 
+    # Rework as operator as well
+    def check_collection(self, collections):
+        for collection in collections:
+            if collection.name == "Diffusion Camera History":
+                return collection
+        camera_history_collection = bpy.data.collections.new("Diffusion Camera History")
+        bpy.context.scene.collection.children.link(camera_history_collection)
+        return camera_history_collection
+
     # Main function
     def execute(self, context):
         scene = context.scene
         diffusion_props = scene.diffusion_properties
+        history_props = scene.history_properties
 
         # Check if any objects have been selected in the diffusion_props.mesh_objects collection
         if not diffusion_props.mesh_objects:
@@ -99,11 +109,22 @@ class GenerateDiffusionOperator(bpy.types.Operator):
             else:
                 obj.hide_render = False
 
-        bpy.ops.object.camera_add()
-        camera = context.active_object
-        scene.camera = camera
+        # Add a camera in Camera History Collection
+        diffusion_history_collection = self.check_collection(scene.collection.children)
 
-        assert camera is not None
+        # Increment ID and generate camera with corresponding ID
+        print(history_props.history_counter)
+        history_props.history_counter += 1
+        ID = history_props.history_counter
+
+        camera_data = bpy.data.cameras.new(name="Camera")
+        camera_object = bpy.data.objects.new(f"Camera {ID}", camera_data)
+        diffusion_history_collection.objects.link(camera_object)
+
+        # camera = context.active_object
+        scene.camera = camera_object
+
+        assert camera_object is not None
         bpy.ops.view3d.camera_to_view()
 
         # switch on nodes
@@ -170,22 +191,25 @@ class GenerateDiffusionOperator(bpy.types.Operator):
 
         # Clean node tree and camera
         # TODO : Add option for camera removal and modification of camera layout setup
-        bpy.data.objects.remove(camera)
+        # bpy.data.objects.remove(camera_object)
 
         for obj in scene.objects:
-            obj.hide_render = original_visibility[obj.name]
+            if obj.name not in diffusion_history_collection.objects:
+                obj.hide_render = original_visibility[obj.name]
 
         tree.nodes.remove(rl)
         tree.nodes.remove(v)
 
         self.send_request(scene, image)
+        # Call operator diffusion.update_history
+        bpy.ops.diffusion.update_history()
 
         return {"FINISHED"}
 
 
-def register():
+def generation_register():
     bpy.utils.register_class(GenerateDiffusionOperator)
 
 
-def unregister():
+def generation_unregister():
     bpy.utils.unregister_class(GenerateDiffusionOperator)

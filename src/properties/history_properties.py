@@ -1,8 +1,5 @@
 import bpy
 
-# pyright: reportInvalidTypeForm=false
-# Refer to this issue as to why this is disabled : https://github.com/microsoft/pylance-release/issues/5457
-
 
 class HistoryItem(bpy.types.PropertyGroup):
     id: bpy.props.IntProperty(name="History ID")
@@ -12,7 +9,10 @@ class HistoryItem(bpy.types.PropertyGroup):
     n_steps: bpy.props.IntProperty(name="Steps")
     scheduler: bpy.props.StringProperty(name="Scheduler")
     negative_prompt: bpy.props.StringProperty(name="Negative Prompt")
-    # generated_image: bpy.types.Image()
+    uuid: bpy.props.StringProperty(name="UUID")
+    url: bpy.props.StringProperty(name="Prompt")
+    fetching_attempts: bpy.props.IntProperty(name="Seed")
+    mesh: bpy.props.StringProperty(name="Mesh")
 
 
 class HistoryProperties(bpy.types.PropertyGroup):

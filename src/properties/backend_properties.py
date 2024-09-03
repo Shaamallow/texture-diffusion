@@ -1,8 +1,5 @@
 import bpy
 
-# pyright: reportInvalidTypeForm=false
-# Refer to this issue as to why this is disabled : https://github.com/microsoft/pylance-release/issues/5457
-
 
 class BackendProperties(bpy.types.PropertyGroup):
 

@@ -20,20 +20,11 @@ class ApplyTextureOperator(bpy.types.Operator):
 
     id: bpy.props.IntProperty(name="ID")
 
-    def find_history_item(self, collection):
+    def find_mesh(self, collection):
         for history_item in collection:
-            print(history_item.id, self.id)
             if history_item.id == self.id:
-                return history_item
-        return None
-
-    def find_camera_object(self, collections):
-        for collection in collections:
-            # TODO : replace hardcoded value with backend prop
-            if collection.name == "Diffusion Camera History":
-                for obj in collection.objects:
-                    if obj.name == f"Camera {self.id}":
-                        return obj
+                mesh = bpy.data.objects[history_item.mesh]
+                return mesh
         return None
 
     def execute(self, context):
@@ -43,68 +34,14 @@ class ApplyTextureOperator(bpy.types.Operator):
         backend_props = scene.backend_properties
 
         # Loop through the history collection and find the item with the right id
-        history_item = self.find_history_item(history_props.history_collection)
+        mesh = self.find_mesh(history_props.history_collection)
 
-        if history_item is None:
+        if mesh is None:
             self.report({"ERROR"}, "No mesh found with the given ID")
             return {"CANCELLED"}
 
-        mesh_name = history_item.mesh
-        mesh = bpy.data.objects[mesh_name]
-
-        # Create a new uv mesh
         mesh.data.uv_layers.new(name=f"Texture {self.id}")
-
-        ### Projection
-
-        # Add Projection modifier with mesh and camera
-        modifier = mesh.modifiers.new(name="Projection", type="UV_PROJECT")
-        modifier.uv_layer = f"Texture {self.id}"
-        modifier.projector_count = 1
-
-        # Get the right camera from the diffusion history collection
-        camera = self.find_camera_object(scene.collection.children)
-        if camera is None:
-            self.report({"ERROR"}, "No camera found with the given ID")
-            return {"CANCELLED"}
-
-        modifier.projectors[0].object = camera
-
-        # Apply the projection with context override
-        context_override = context.copy()
-        context_override["object"] = mesh
-        with context.temp_override(**context_override):
-            bpy.ops.object.modifier_apply(modifier=modifier.name)
-
-        ### Materials and Textures
-        # Create a new material for the selected object
-        material = bpy.data.materials.new(name=f"Material {self.id}")
-        material.use_nodes = True
-
-        # Add the material to the object
-        mesh.data.materials.append(material)
-
-        # Add nodes
-        tree = material.node_tree
-        assert tree is not None
-        nodes = tree.nodes
-        assert nodes is not None
-        links = tree.links
-        assert links is not None
-
-        uv_node = nodes.new("ShaderNodeUVMap")
-        image_node = nodes.new("ShaderNodeTexImage")
-
-        # Set values
-        uv_node.uv_map = f"Texture {self.id}"
-        image_node.image = bpy.data.images[f"Generation_{self.id}.png"]
-
-        # Links the nodes
-        links.new(uv_node.outputs[0], image_node.inputs[0])
-        links.new(image_node.outputs[0], nodes["Principled BSDF"].inputs[0])
-
-        # Set the material as active
-        mesh.active_material = material
+        # Add modifier to mesh
 
         return {"FINISHED"}
 
@@ -310,16 +247,12 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         # Call operator diffusion.update_history
         bpy.ops.diffusion.update_history(uuid=request_uuid)
 
-        # TODO : FIX PIL dep + IO Error trunckated image file
-
         return {"FINISHED"}
 
 
 def generation_register():
     bpy.utils.register_class(GenerateDiffusionOperator)
-    bpy.utils.register_class(ApplyTextureOperator)
 
 
 def generation_unregister():
     bpy.utils.unregister_class(GenerateDiffusionOperator)
-    bpy.utils.unregister_class(ApplyTextureOperator)

@@ -5,6 +5,7 @@ import bpy
 class AddMeshOperator(bpy.types.Operator):
     bl_idname = "diffusion.add_mesh"
     bl_label = "Add Mesh"
+    # Allow only one mesh selected at a time
 
     def execute(self, context):
         scene = context.scene
@@ -48,6 +49,9 @@ class SelectMeshOperator(bpy.types.Operator):
     def execute(self, context):
         scene = context.scene
         diffusion_props = scene.diffusion_properties
+
+        # Remove previous mesh
+        bpy.ops.diffusion.remove_mesh(index=0)
 
         # Add the selected mesh to the collection
         new_mesh_item = diffusion_props.mesh_objects.add()

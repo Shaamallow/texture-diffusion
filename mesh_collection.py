@@ -8,9 +8,6 @@ import numpy as np
 import requests
 from PIL import Image
 
-# pyright: reportInvalidTypeForm=false
-# Refer to this issue as to why this is disabled : https://github.com/microsoft/pylance-release/issues/5457
-
 
 # Define a class to store individual mesh selection with a Boolean property
 class MeshItem(bpy.types.PropertyGroup):

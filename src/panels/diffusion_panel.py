@@ -17,11 +17,16 @@ class DiffusionPanel(bpy.types.Panel):
         layout.prop(diffusion_properties, "models_available")
 
         layout.prop(diffusion_properties, "prompt")
-        row = layout.row()
-        row.prop(diffusion_properties, "n_steps")
-        row.prop(diffusion_properties, "cfg_scale")
+        layout.prop(diffusion_properties, "n_steps")
 
-        layout.prop(diffusion_properties, "seed")
+        row = layout.row()
+        row.prop(diffusion_properties, "cfg_scale")
+        row.prop(diffusion_properties, "controlnet_scale")
+
+        row = layout.row()
+        row.prop(diffusion_properties, "seed")
+        row.prop(diffusion_properties, "random_seed")
+
         layout.prop(diffusion_properties, "show_advanced")
 
         # TODO : Turn this into a Advanced Panel using a new class
@@ -32,10 +37,10 @@ class DiffusionPanel(bpy.types.Panel):
         # Add a visual separator and different background for the mesh collection
         layout.separator()
         box = layout.box()
-        box.label(text="Select Meshes", icon="MESH_DATA")
+        box.label(text="Select Mesh", icon="MESH_DATA")
 
         # Button to add a mesh object to the collection
-        box.operator("diffusion.add_mesh", text="Add Mesh")
+        box.operator("diffusion.add_mesh", text="Select Mesh")
 
         # Display the mesh_objects collection with remove buttons
         for i, mesh_item in enumerate(diffusion_properties.mesh_objects):

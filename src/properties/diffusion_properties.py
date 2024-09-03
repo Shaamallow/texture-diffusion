@@ -1,8 +1,5 @@
 import bpy
 
-# pyright: reportInvalidTypeForm=false
-# Refer to this issue as to why this is disabled : https://github.com/microsoft/pylance-release/issues/5457
-
 
 class MeshItem(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(name="Mesh Name")
@@ -33,12 +30,23 @@ class DiffusionProperties(bpy.types.PropertyGroup):
         default=5.5,
         min=0.0,
     )
+    controlnet_scale: bpy.props.FloatProperty(
+        name="ControlNet Scale",
+        description="Controlnet Strengh for the conditioning. 0 means no depth conditioning",
+        default=0.7,
+        min=0.0,
+    )
     seed: bpy.props.IntProperty(
         name="seed",
-        description="Seed for the generation. 0 is random seed",
+        description="Seed for the generation.",
         default=42,
         min=0,
         max=1000000,
+    )
+    random_seed: bpy.props.BoolProperty(
+        name="Use a random seed",
+        description="Toggle random seed for generationg",
+        default=False,
     )
     show_advanced: bpy.props.BoolProperty(
         name="Show Advanced Parameters",
@@ -54,6 +62,14 @@ class DiffusionProperties(bpy.types.PropertyGroup):
         description="Scheduler for the diffusion process",
         items=[("DDIM", "DDIM", ""), ("DDPM", "DDPM", ""), ("LCM", "LCM", "")],
         default="DDIM",
+    )
+
+    height: bpy.props.IntProperty(
+        name="Height", description="Height of the generated image", default=1024
+    )
+
+    width: bpy.props.IntProperty(
+        name="Width", description="Height of the generated image", default=1024
     )
 
     def update_mesh_collection(self, context):

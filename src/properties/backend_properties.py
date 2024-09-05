@@ -29,6 +29,10 @@ class BackendProperties(bpy.types.PropertyGroup):
         description="Token for the backend",
     )
 
+    history_collection_name: bpy.props.StringProperty(
+        name="History Collection Name", default="Diffusion Camera History"
+    )
+
 
 def register():
     bpy.utils.register_class(BackendProperties)

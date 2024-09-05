@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import uuid
 from pathlib import Path
@@ -27,10 +28,13 @@ class ApplyTextureOperator(bpy.types.Operator):
                 return history_item
         return None
 
-    def find_camera_object(self, collections):
+    def find_camera_object(self, context, collections):
+
+        backend_props = context.scene.backend_properties
+
         for collection in collections:
-            # TODO : replace hardcoded value with backend prop
-            if collection.name == "Diffusion Camera History":
+            # TODO: replace hardcoded value with backend prop
+            if collection.name == backend_props.history_collection_name:
                 for obj in collection.objects:
                     if obj.name == f"Camera {self.id}":
                         return obj
@@ -63,7 +67,7 @@ class ApplyTextureOperator(bpy.types.Operator):
         modifier.projector_count = 1
 
         # Get the right camera from the diffusion history collection
-        camera = self.find_camera_object(scene.collection.children)
+        camera = self.find_camera_object(context, scene.collection.children)
         if camera is None:
             self.report({"ERROR"}, "No camera found with the given ID")
             return {"CANCELLED"}
@@ -290,8 +294,8 @@ class GenerateDiffusionOperator(bpy.types.Operator):
 
         image = Image.fromarray(reverse)
         file_path = bpy.data.scenes["Scene"].render.filepath
-        # TODO : replace with os.path.join
-        save_path = f"{file_path}depth_{ID}.png"
+        # TODO: replace with os.path.join
+        save_path = os.path.join(file_path, f"depth_{ID}.png")
         image.save(save_path)
         bpy.data.images.load(save_path, check_existing=True)
 
@@ -310,7 +314,7 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         # Call operator diffusion.update_history
         bpy.ops.diffusion.update_history(uuid=request_uuid)
 
-        # TODO : FIX PIL dep + IO Error trunckated image file
+        # TODO: FIX PIL dep + IO Error trunckated image file
 
         return {"FINISHED"}
 

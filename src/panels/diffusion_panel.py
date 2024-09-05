@@ -29,7 +29,7 @@ class DiffusionPanel(bpy.types.Panel):
 
         layout.prop(diffusion_properties, "show_advanced")
 
-        # TODO : Turn this into a Advanced Panel using a new class
+        # TODO: Turn this into a Advanced Panel using a new class
         if diffusion_properties.show_advanced:
             layout.prop(diffusion_properties, "negative_prompt")
             layout.prop(diffusion_properties, "scheduler")

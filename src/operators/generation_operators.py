@@ -13,6 +13,10 @@ from PIL import Image
 from ..functions.utils import (convert_to_bytes, linear_to_srgb_array,
                                normalize_array, reverse_color)
 
+# TODO: remove dep on urllib
+
+
+
 
 class ApplyTextureOperator(bpy.types.Operator):
     bl_idname = "diffusion.apply_texture"

@@ -1,4 +1,7 @@
+from typing import List
+
 import bpy
+import requests
 
 
 class MeshItem(bpy.types.PropertyGroup):
@@ -7,14 +10,66 @@ class MeshItem(bpy.types.PropertyGroup):
 
 class DiffusionProperties(bpy.types.PropertyGroup):
 
+    # Update the model
+    # NOTE: add watchdog to update the models ONLY every 1 minute
+    # NOTE: change to operators ?
+    def update_models(self, context):
+
+        base_url = context.scene.backend_properties.url
+        route = "/models/checkpoints"
+        response = requests.get(f"{base_url}{route}")
+
+        if response.status_code == 200:
+            models: List[str] = response.json()
+            models_list = [
+                (
+                    model.replace(".safetensors", ""),
+                    model.replace(".safetensors", ""),
+                    "",
+                )
+                for model in models
+            ]
+        else:
+            models_list = []
+        return models_list
+
+    def update_loras(self, context):
+
+        base_url = context.scene.backend_properties.url
+        route = "/models/loras"
+        response = requests.get(f"{base_url}{route}")
+
+        if response.status_code == 200:
+            loras: List[str] = response.json()
+            loras_list = [
+                (
+                    lora.replace(".safetensors", ""),
+                    lora.replace(".safetensors", ""),
+                    "",
+                )
+                for lora in loras
+            ]
+            loras_list.append(("None", "None", ""))
+        else:
+            loras_list = []
+        return loras_list
+
     mesh_objects: bpy.props.CollectionProperty(type=MeshItem)
 
     models_available: bpy.props.EnumProperty(
         name="Models",
         description="Pick a model from the available models you have downloaded",
-        items=[("sdxl", "SDXL", "Base SDXL model available on huggingface")],
+        items=update_models,
         default=None,
     )
+    loras_available: bpy.props.EnumProperty(
+        name="Loras",
+        description="Pick a lora from the available loras you have downloaded",
+        items=update_loras,
+        default=None,
+    )
+
+    # Properties for the diffusion generation
     prompt: bpy.props.StringProperty(
         name="Prompt", description="Text prompt for the diffusion effect"
     )

@@ -33,6 +33,7 @@ class DiffusionPanel(bpy.types.Panel):
         if diffusion_properties.show_advanced:
             layout.prop(diffusion_properties, "negative_prompt")
             layout.prop(diffusion_properties, "scheduler")
+            layout.prop(diffusion_properties, "loras_available")
 
         # Add a visual separator and different background for the mesh collection
         layout.separator()

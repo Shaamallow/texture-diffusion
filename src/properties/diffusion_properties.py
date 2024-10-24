@@ -11,8 +11,6 @@ class MeshItem(bpy.types.PropertyGroup):
 class DiffusionProperties(bpy.types.PropertyGroup):
 
     # Update the model
-    # NOTE: add watchdog to update the models ONLY every 1 minute
-    # NOTE: change to operators ?
     def update_models(self, context):
 
         base_url = context.scene.backend_properties.url
@@ -106,6 +104,11 @@ class DiffusionProperties(bpy.types.PropertyGroup):
     show_advanced: bpy.props.BoolProperty(
         name="Show Advanced Parameters",
         description="Toggle advanced parameters",
+        default=False,
+    )
+    toggle_inpainting: bpy.props.BoolProperty(
+        name="Toggle Inpainting",
+        description="Toggle Inpainting",
         default=False,
     )
     negative_prompt: bpy.props.StringProperty(

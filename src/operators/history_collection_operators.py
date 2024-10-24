@@ -3,7 +3,9 @@ from io import BytesIO
 
 import bpy
 import requests
-from PIL import Image
+from PIL import Image, ImageFile
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 def fetch_image(history_item):

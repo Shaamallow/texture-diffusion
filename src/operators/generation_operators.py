@@ -16,8 +16,6 @@ from ..functions.utils import (convert_to_bytes, linear_to_srgb_array,
 # TODO: remove dep on urllib
 
 
-
-
 class ApplyTextureOperator(bpy.types.Operator):
     bl_idname = "diffusion.apply_texture"
     bl_label = "Apply Texture"
@@ -65,24 +63,39 @@ class ApplyTextureOperator(bpy.types.Operator):
 
         ### Projection
 
-        # Add Projection modifier with mesh and camera
-        modifier = mesh.modifiers.new(name="Projection", type="UV_PROJECT")
-        modifier.uv_layer = f"Texture {self.id}"
-        modifier.projector_count = 1
+        # TODO: Find the projection operator for specific sub-mesh (selected from UV-editing Tab)
+        # if inpainting is true
+        # add a poll check for context to have vertex selected
 
-        # Get the right camera from the diffusion history collection
-        camera = self.find_camera_object(context, scene.collection.children)
-        if camera is None:
-            self.report({"ERROR"}, "No camera found with the given ID")
-            return {"CANCELLED"}
+        inpainting = diffusion_props.toggle_inpainting
 
-        modifier.projectors[0].object = camera
+        if inpainting:
+            # check the following:
+            # https://blender.stackexchange.com/questions/99035/how-to-unwrap-project-from-view-with-script
+            bpy.ops.uv.project_from_view(
+                camera_bounds=False,
+                correct_aspect=True,
+                scale_to_bounds=False,
+            )
+        else:
+            # Add Projection modifier with mesh and camera
+            modifier = mesh.modifiers.new(name="Projection", type="UV_PROJECT")
+            modifier.uv_layer = f"Texture {self.id}"
+            modifier.projector_count = 1
 
-        # Apply the projection with context override
-        context_override = context.copy()
-        context_override["object"] = mesh
-        with context.temp_override(**context_override):
-            bpy.ops.object.modifier_apply(modifier=modifier.name)
+            # Get the right camera from the diffusion history collection
+            camera = self.find_camera_object(context, scene.collection.children)
+            if camera is None:
+                self.report({"ERROR"}, "No camera found with the given ID")
+                return {"CANCELLED"}
+
+            modifier.projectors[0].object = camera
+
+            # Apply the projection with context override
+            context_override = context.copy()
+            context_override["object"] = mesh
+            with context.temp_override(**context_override):
+                bpy.ops.object.modifier_apply(modifier=modifier.name)
 
         ### Materials and Textures
         # Create a new material for the selected object
@@ -236,7 +249,15 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         scene.camera = camera_object
 
         assert camera_object is not None
-        bpy.ops.view3d.camera_to_view()
+        # Context override
+
+        win = context.window
+        scr = win.screen
+        areas3d = [area for area in scr.areas if area.type == "VIEW_3D"]
+        region = [region for region in areas3d[0].regions if region.type == "WINDOW"]
+
+        with bpy.context.temp_override(window=win, area=areas3d[0], region=region[0]):
+            bpy.ops.view3d.camera_to_view()
 
         # switch on nodes
         scene.use_nodes = True

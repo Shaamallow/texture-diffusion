@@ -47,8 +47,11 @@ Add images for :
 # Features Roadmap
 
 - Change camera behavior : Diffusion Camera + Camera Selector. Allow lock to view. Need to rework history to :
+
   - Save camera position
   - Assign function = assign textures + Update camera with old position
+  - [x] Fix the Camera error with wrong context
+
 - Open render window for depth map estimation AND image generation
 - Support FLUX models (update the comfy Workflow)
 - Add inpainting (for multi texturing) using vertex paint

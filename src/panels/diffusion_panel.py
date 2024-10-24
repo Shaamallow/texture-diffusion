@@ -51,6 +51,7 @@ class DiffusionPanel(bpy.types.Panel):
 
         # Add a big "Generate" button at the bottom of the panel
         layout.separator()
+        layout.prop(diffusion_properties, "toggle_inpainting")
         layout.operator("diffusion.generate", text="Generate", icon="RENDER_STILL")
 
 

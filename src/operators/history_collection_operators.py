@@ -3,9 +3,7 @@ from io import BytesIO
 
 import bpy
 import requests
-from PIL import Image, ImageFile
-
-ImageFile.LOAD_TRUNCATED_IMAGES = True
+from PIL import Image
 
 
 def fetch_image(history_item):
@@ -19,36 +17,53 @@ def fetch_image(history_item):
     if history_item.fetching_attempts < 1:
         print(view_image_url)
 
-    params = {"filename": file_name, "subfolder": "blender-texture", "type": "output"}
-    url = f"{base_url}/view"
-    response = requests.get(url, params=params)
+    try:
+        params = {
+            "filename": file_name,
+            "subfolder": "blender-texture",
+            "type": "output",
+        }
+        url = f"{base_url}/view"
+        response = requests.get(url, params=params)
 
-    # Check if the response is successful
-    if response.status_code == 200:
-        # Load the image from the response content
-        print("Image fetched successfully")
-        image = Image.open(BytesIO(response.content))
+        # Check if the response is successful
+        if response.status_code == 200:
+            # Load the image from the response content
+            print("Image fetched successfully")
+            image = Image.open(BytesIO(response.content))
 
-        file_path = bpy.data.scenes["Scene"].render.filepath
-        save_path = f"{file_path}Generation_{history_item.id}.png"
+            file_path = bpy.data.scenes["Scene"].render.filepath
+            save_path = f"{file_path}Generation_{history_item.id}.png"
 
-        print(f"Saving image to {save_path}")
-        image.save(save_path)
-        bpy.data.images.load(save_path, check_existing=True)
+            print(f"Saving image to {save_path}")
+            image.save(save_path)
+            bpy.data.images.load(save_path, check_existing=True)
 
-        print(f"Applying the Texture {history_item.id}")
-        bpy.ops.diffusion.apply_texture(id=history_item.id)
+            print(f"Applying the Texture {history_item.id}")
+            bpy.ops.diffusion.apply_texture(id=history_item.id)
 
-        return
-    else:
-        print(
-            f"Failed to retrieve image. Status code: {response.status_code}. Attempt : {history_item.fetching_attempts}"
-        )
+            return
+
+        else:
+            print(
+                f"Failed to retrieve image. Status code: {response.status_code}. Attempt : {history_item.fetching_attempts}"
+            )
+            history_item.fetching_attempts += 1
+
+            if history_item.fetching_attempts > 40:
+                print("Failed to retrieve image after 40 attempts")
+                return
+            return 1.0
+
+    except OSError as e:
+
+        print(f"Failed to retrieve image. Error: {e}")
         history_item.fetching_attempts += 1
 
         if history_item.fetching_attempts > 40:
             print("Failed to retrieve image after 40 attempts")
             return
+
         return 1.0
 
 

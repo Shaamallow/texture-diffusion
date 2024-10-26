@@ -44,15 +44,12 @@ Add images for :
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
 - **ME**
 
-# Features Roadmap
+# Roadmap
 
-- Change camera behavior : Diffusion Camera + Camera Selector. Allow lock to view. Need to rework history to :
-
-  - Save camera position
-  - Assign function = assign textures + Update camera with old position
-  - [x] Fix the Camera error with wrong context
-
-- Open render window for depth map estimation AND image generation
-- Support FLUX models (update the comfy Workflow)
-- Add inpainting (for multi texturing) using vertex paint
-- Add option for rendering scene (discard selected mesh and don't apply texture)
+- [ ] Inpainting
+- [ ] IP-Adapter
+- [ ] LoRA
+- [ ] Flux Support
+- [ ] Progression Bar
+- [ ] Multiple View Generation at once
+- [ ] Replicate

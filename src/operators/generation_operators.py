@@ -5,6 +5,7 @@ import uuid
 from pathlib import Path
 from urllib import request
 
+import bmesh
 import bpy
 import numpy as np
 import requests
@@ -14,6 +15,8 @@ from ..functions.utils import (convert_to_bytes, linear_to_srgb_array,
                                normalize_array, reverse_color)
 
 # TODO: remove dep on urllib
+# TODO: remove dep on PIL
+# TODO: Add context override for each operator that is called (ie : when applying sutff)
 
 
 class ApplyTextureOperator(bpy.types.Operator):
@@ -35,7 +38,6 @@ class ApplyTextureOperator(bpy.types.Operator):
         backend_props = context.scene.backend_properties
 
         for collection in collections:
-            # TODO: replace hardcoded value with backend prop
             if collection.name == backend_props.history_collection_name:
                 for obj in collection.objects:
                     if obj.name == f"Camera {self.id}":
@@ -46,7 +48,6 @@ class ApplyTextureOperator(bpy.types.Operator):
         scene = context.scene
         history_props = scene.history_properties
         diffusion_props = scene.diffusion_properties
-        backend_props = scene.backend_properties
 
         # Loop through the history collection and find the item with the right id
         history_item = self.find_history_item(history_props.history_collection)
@@ -61,23 +62,61 @@ class ApplyTextureOperator(bpy.types.Operator):
         # Create a new uv mesh
         mesh.data.uv_layers.new(name=f"Texture {self.id}")
 
-        ### Projection
+        # assign the new uv mesh as active
+        mesh.data.uv_layers.active_index = len(mesh.data.uv_layers) - 1
 
-        # TODO: Find the projection operator for specific sub-mesh (selected from UV-editing Tab)
-        # if inpainting is true
-        # add a poll check for context to have vertex selected
+        ### Projection
 
         inpainting = diffusion_props.toggle_inpainting
 
         if inpainting:
-            # check the following:
-            # https://blender.stackexchange.com/questions/99035/how-to-unwrap-project-from-view-with-script
-            bpy.ops.uv.project_from_view(
-                camera_bounds=False,
-                correct_aspect=True,
-                scale_to_bounds=False,
-            )
+            # Get the current VIEW_3D area and WINDOW region
+            view_3d_area = None
+            view_3d_region = None
+
+            for area in bpy.context.screen.areas:
+                if area.type == "VIEW_3D":
+                    view_3d_area = area
+                    for region in area.regions:
+                        if region.type == "WINDOW":
+                            view_3d_region = region
+                            break
+                    if view_3d_region:
+                        break
+
+            if not view_3d_area or not view_3d_region:
+                raise RuntimeError(
+                    "No VIEW_3D area or WINDOW region found, cannot project UV from view."
+                )
+
+            context_override = context.copy()
+            context_override["area"] = view_3d_area
+            context_override["region"] = view_3d_region
+
+            # Create a context override using bpy.context.temp_override()
+            with bpy.context.temp_override(**context_override):
+                # Call the operator with the temporarily overridden context
+                bpy.ops.uv.project_from_view(
+                    camera_bounds=False,
+                    correct_aspect=True,
+                    scale_to_bounds=False,
+                )
+
+                # then add the color attribute automatically
+                # https://blender.stackexchange.com/questions/280716/python-code-to-set-color-attributes-per-vertex-in-blender-3-5
+
+            obj = mesh
+            bm = bmesh.from_edit_mesh(obj.data)
+
+            collayer = bm.loops.layers.color.new(f"only selected {self.id}")
+
+            for f in bm.faces:
+                if f.select:
+                    for l in f.loops:
+                        l[collayer] = [0, 0, 0, 1]
+
         else:
+            # TODO: add override to exit edit mode if in edit mode
             # Add Projection modifier with mesh and camera
             modifier = mesh.modifiers.new(name="Projection", type="UV_PROJECT")
             modifier.uv_layer = f"Texture {self.id}"
@@ -98,31 +137,86 @@ class ApplyTextureOperator(bpy.types.Operator):
                 bpy.ops.object.modifier_apply(modifier=modifier.name)
 
         ### Materials and Textures
-        # Create a new material for the selected object
-        material = bpy.data.materials.new(name=f"Material {self.id}")
-        material.use_nodes = True
 
-        # Add the material to the object
-        mesh.data.materials.append(material)
+        if inpainting:
+            material = mesh.data.materials[0]  # supposed to be active material ?
+            tree = material.node_tree
+            nodes = tree.nodes
+            links = tree.links
 
-        # Add nodes
-        tree = material.node_tree
-        assert tree is not None
-        nodes = tree.nodes
-        assert nodes is not None
-        links = tree.links
-        assert links is not None
+            # Create necessary nodes
+            uv_node_new = nodes.new("ShaderNodeUVMap")
+            image_node_new = nodes.new("ShaderNodeTexImage")
+            color_mix = nodes.new("ShaderNodeMix")
+            color_attribute = nodes.new("ShaderNodeVertexColor")
 
-        uv_node = nodes.new("ShaderNodeUVMap")
-        image_node = nodes.new("ShaderNodeTexImage")
+            # Fetch existing mix nodes
+            color_mix_existing_set = []
+            for node in nodes:
+                if node.type == "MIX":
+                    color_mix_existing_set.append(node)
+            n_existing_mix = len(color_mix_existing_set)
 
-        # Set values
-        uv_node.uv_map = f"Texture {self.id}"
-        image_node.image = bpy.data.images[f"Generation_{self.id}.png"]
+            # Set locations
+            uv_node_new.location = (-1000, 100 + (150 * n_existing_mix))
+            image_node_new.location = (-800, 100 + (150 * n_existing_mix))
+            color_attribute.location = (-600, 100 + (150 * n_existing_mix))
+            color_mix.location = (-400, 100 + (150 * n_existing_mix))
 
-        # Links the nodes
-        links.new(uv_node.outputs[0], image_node.inputs[0])
-        links.new(image_node.outputs[0], nodes["Principled BSDF"].inputs[0])
+            # Set values
+            color_mix.data_type = "RGBA"
+            color_attribute.layer_name = f"only selected {self.id}"
+            uv_node_new.uv_map = f"Texture {self.id}"
+            image_node_new.image = bpy.data.images[f"Generation_{self.id}.png"]
+
+            # Links the nodes
+            links.new(color_attribute.outputs[0], color_mix.inputs[0])
+
+            ## new generation links
+            links.new(uv_node_new.outputs[0], image_node_new.inputs[0])
+            links.new(image_node_new.outputs[0], color_mix.inputs["A"])
+
+            if len(color_mix_existing_set) == 1:
+                # No existing mix node
+                links.new(nodes["Image Texture"].outputs[0], color_mix.inputs["B"])
+            else:
+                # get the previous mix node
+                color_mix_existing_set.sort(key=lambda x: x.name)
+                color_mix_previous = color_mix_existing_set[-2]
+
+                links.new(color_mix_previous.outputs["Result"], color_mix.inputs["B"])
+
+            links.new(color_mix.outputs["Result"], nodes["Principled BSDF"].inputs[0])
+
+        else:
+            material = bpy.data.materials.new(name=f"Material {self.id}")
+            material.use_nodes = True
+
+            # Add the material to the object
+            mesh.data.materials.append(material)
+
+            # Add nodes
+            tree = material.node_tree
+            assert tree is not None
+            nodes = tree.nodes
+            assert nodes is not None
+            links = tree.links
+            assert links is not None
+
+            uv_node = nodes.new("ShaderNodeUVMap")
+            image_node = nodes.new("ShaderNodeTexImage")
+
+            # set locations
+            uv_node.location = (-1000, 100)
+            image_node.location = (-800, 100)
+
+            # Set values
+            uv_node.uv_map = f"Texture {self.id}"
+            image_node.image = bpy.data.images[f"Generation_{self.id}.png"]
+
+            # Links the nodes
+            links.new(uv_node.outputs[0], image_node.inputs[0])
+            links.new(image_node.outputs[0], nodes["Principled BSDF"].inputs[0])
 
         # Set the material as active
         mesh.active_material = material
@@ -179,6 +273,7 @@ class GenerateDiffusionOperator(bpy.types.Operator):
             diffusion_props.seed = seed
         prompt_request["6"]["inputs"]["text"] = positive_prompt
 
+        print(seed)
         # input parameters
         prompt_request["3"]["inputs"]["seed"] = seed
         prompt_request["3"]["inputs"]["cfg"] = diffusion_props.cfg_scale
@@ -319,7 +414,6 @@ class GenerateDiffusionOperator(bpy.types.Operator):
 
         image = Image.fromarray(reverse)
         file_path = bpy.data.scenes["Scene"].render.filepath
-        # TODO: replace with os.path.join
         save_path = os.path.join(file_path, f"depth_{ID}.png")
         image.save(save_path)
         bpy.data.images.load(save_path, check_existing=True)
@@ -338,8 +432,6 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         self.send_request(scene, image, request_uuid)
         # Call operator diffusion.update_history
         bpy.ops.diffusion.update_history(uuid=request_uuid)
-
-        # TODO: FIX PIL dep + IO Error trunckated image file
 
         return {"FINISHED"}
 

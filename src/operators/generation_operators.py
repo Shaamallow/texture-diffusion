@@ -3,6 +3,7 @@ import os
 import random
 import uuid
 from pathlib import Path
+from typing import Literal, Optional
 from urllib import request
 
 import bmesh
@@ -108,12 +109,23 @@ class ApplyTextureOperator(bpy.types.Operator):
             obj = mesh
             bm = bmesh.from_edit_mesh(obj.data)
 
-            collayer = bm.loops.layers.color.new(f"only selected {self.id}")
+            blending_mode: Literal["blending", "hard edeges"] = (
+                diffusion_props.inpainting_mode
+            )
 
-            for f in bm.faces:
-                if f.select:
-                    for l in f.loops:
-                        l[collayer] = [0, 0, 0, 1]
+            if blending_mode == "blending":
+                collayer = bm.verts.layers.color.new(f"only selected {self.id}")
+                for v in bm.verts:
+                    if v.select:
+                        v[collayer] = [0, 0, 0, 1]
+
+            elif blending_mode == "hard edges":
+                collayer = bm.loops.layers.color.new(f"only selected {self.id}")
+
+                for f in bm.faces:
+                    if f.select:
+                        for l in f.loops:
+                            l[collayer] = [0, 0, 0, 1]
 
         else:
             # TODO: add override to exit edit mode if in edit mode
@@ -232,28 +244,25 @@ class GenerateDiffusionOperator(bpy.types.Operator):
     def poll(cls, context):
         return context.active_object is not None
 
-    def send_request(self, scene, depth_image: Image.Image, uuid: str):
+    def send_request(
+        self,
+        scene,
+        depth_image: Image.Image,
+        inpainting_image: Optional[Image.Image],
+        uuid_value: str,
+    ):
         diffusion_props = scene.diffusion_properties
         backend_props = scene.backend_properties
-
-        # Get request parameters
+        output_prefix = f"blender-texture/{uuid_value}_output"
         url = backend_props.url
-        input_name = f"{uuid}_depth.png"
-        output_prefix = f"blender-texture/{uuid}_output"
 
-        # Get request payload
+        input_depth_name = f"{uuid_value}_depth.png"
+        input_inpainting_name = f"{uuid_value}_inpainting.png"
+
+        # Send Depth Image
         buffer = convert_to_bytes(depth_image)
-        json_path = (
-            Path(__file__).parent.parent.parent / "workflows" / "controlnet_depth.json"
-        )
-        with open(json_path) as f:
-            prompt_text = f.read()
-        prompt_request = json.loads(prompt_text)
+        files = {"image": (input_depth_name, buffer, "image/png")}
 
-        # Prepare the multipart/form-data payload
-        files = {"image": (input_name, buffer, "image/png")}
-
-        # Additional data can be added to the request if needed
         data = {
             "type": "input",
             "overwrite": "true",
@@ -261,10 +270,48 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         response = requests.post(f"{url}/upload/image", files=files, data=data)
 
         if response.status_code != 200:
-            print("Error occured")
+            print("Error occured while sending depth image")
             return
 
-        # Get Generation Parameters
+        if inpainting_image is not None:
+            input_inpainting_name = f"{uuid_value}_inpainting.png"
+            buffer = convert_to_bytes(inpainting_image)
+            files = {"image": (input_inpainting_name, buffer, "image/png")}
+            data = {
+                "type": "input",
+                "overwrite": "true",
+            }
+            response = requests.post(f"{url}/upload/image", files=files, data=data)
+
+            if response.status_code != 200:
+                print("Error occured while sending inpainting image")
+                return
+
+        # Prepare Request
+
+        # TODO: change to have image2image and IPAdapter separated
+        if diffusion_props.toggle_ipadapter:
+            json_path = (
+                Path(__file__).parent.parent.parent
+                / "workflows"
+                / "controlnet_depth_ipadapter.json"
+            )
+        elif diffusion_props.toggle_image2image:
+            json_path = (
+                Path(__file__).parent.parent.parent
+                / "workflows"
+                / "controlnet_depth_image2image.json"
+            )
+        else:
+            json_path = (
+                Path(__file__).parent.parent.parent
+                / "workflows"
+                / "controlnet_depth.json"
+            )
+        with open(json_path) as f:
+            prompt_workflow_json = f.read()
+        prompt_request = json.loads(prompt_workflow_json)
+
         positive_prompt = diffusion_props.prompt
         seed = diffusion_props.seed
 
@@ -273,7 +320,6 @@ class GenerateDiffusionOperator(bpy.types.Operator):
             diffusion_props.seed = seed
         prompt_request["6"]["inputs"]["text"] = positive_prompt
 
-        print(seed)
         # input parameters
         prompt_request["3"]["inputs"]["seed"] = seed
         prompt_request["3"]["inputs"]["cfg"] = diffusion_props.cfg_scale
@@ -281,7 +327,14 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         prompt_request["11"]["inputs"]["strength"] = diffusion_props.controlnet_scale
 
         # Input-Output Name format
-        prompt_request["12"]["inputs"]["image"] = input_name
+
+        # Depth Image Input
+        prompt_request["12"]["inputs"]["image"] = input_depth_name
+
+        # Inpainting Image Input
+        if diffusion_props.toggle_inpainting:
+            prompt_request["16"]["inputs"]["image"] = input_inpainting_name
+
         prompt_request["9"]["inputs"]["filename_prefix"] = output_prefix
         # output_name = f"{output_prefix}_output_00001_.png"
         # Add view register using this output_name
@@ -354,7 +407,33 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         with bpy.context.temp_override(window=win, area=areas3d[0], region=region[0]):
             bpy.ops.view3d.camera_to_view()
 
-        # switch on nodes
+        render_image = None
+
+        # Render the viewport for inpainting
+        if diffusion_props.toggle_inpainting:
+            overlay_previous_status = (
+                bpy.context.space_data.overlay.show_overlays  # pyright: ignore[reportAttributeAccessIssue]
+            )
+            previous_output_path = context.scene.render.filepath
+            bpy.context.space_data.overlay.show_overlays = (  # pyright: ignore[reportAttributeAccessIssue]
+                False
+            )
+
+            # change the output path to have the openGL output
+            save_path = os.path.join(
+                previous_output_path, f"tmp_render_opengl_inpainting_{ID}.png"
+            )
+            context.scene.render.filepath = save_path
+            bpy.ops.render.opengl(write_still=True)
+            bpy.context.space_data.overlay.show_overlays = (  # pyright: ignore[reportAttributeAccessIssue]
+                overlay_previous_status
+            )
+
+            context.scene.render.filepath = previous_output_path
+
+            render_image = Image.open(save_path)
+
+        # Render the depthmap
         scene.use_nodes = True
         tree = scene.node_tree
         assert tree is not None
@@ -383,7 +462,7 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         # get viewer pixels
         viewer_image = bpy.data.images["Viewer Node"]
 
-        # Get Dimensions and reshape to proper image format
+        # Process the depthmap
         if viewer_image.size[0] > 0 and viewer_image.size[1] > 0:
 
             width, height = viewer_image.size
@@ -412,11 +491,15 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         image_array = linear_to_srgb_array(arr)
         reverse = reverse_color(image_array)
 
+        # Convert to PIL format before sending request
+
         image = Image.fromarray(reverse)
         file_path = bpy.data.scenes["Scene"].render.filepath
         save_path = os.path.join(file_path, f"depth_{ID}.png")
         image.save(save_path)
         bpy.data.images.load(save_path, check_existing=True)
+
+        # Clean up
 
         for obj in scene.objects:
             if obj.name not in diffusion_history_collection.objects:
@@ -429,7 +512,12 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         request_uuid = str(uuid.uuid4())
         print(request_uuid)
 
-        self.send_request(scene, image, request_uuid)
+        self.send_request(
+            scene,
+            depth_image=image,
+            inpainting_image=render_image,
+            uuid_value=request_uuid,
+        )
         # Call operator diffusion.update_history
         bpy.ops.diffusion.update_history(uuid=request_uuid)
 

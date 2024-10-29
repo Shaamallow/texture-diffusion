@@ -274,7 +274,6 @@ class GenerateDiffusionOperator(bpy.types.Operator):
             return
 
         if inpainting_image is not None:
-            input_inpainting_name = f"{uuid_value}_inpainting.png"
             buffer = convert_to_bytes(inpainting_image)
             files = {"image": (input_inpainting_name, buffer, "image/png")}
             data = {
@@ -289,25 +288,32 @@ class GenerateDiffusionOperator(bpy.types.Operator):
 
         # Prepare Request
 
-        # TODO: change to have image2image and IPAdapter separated
-        if diffusion_props.toggle_ipadapter:
-            json_path = (
-                Path(__file__).parent.parent.parent
-                / "workflows"
-                / "controlnet_depth_ipadapter.json"
-            )
-        elif diffusion_props.toggle_image2image:
-            json_path = (
-                Path(__file__).parent.parent.parent
-                / "workflows"
-                / "controlnet_depth_image2image.json"
-            )
+        # TODO:
+        # - Update the logic to re-route the inpainting image
+        # - add noising for image to image
+        if diffusion_props.toggle_inpainting:
+            if diffusion_props.toggle_ipadapter:
+                json_path = (
+                    Path(__file__).parent.parent.parent
+                    / "workflows"
+                    / "controlnet_depth_ipadapter.json"
+                )
+            elif diffusion_props.toggle_image2image:
+                json_path = (
+                    Path(__file__).parent.parent.parent
+                    / "workflows"
+                    / "controlnet_depth_image2image.json"
+                )
+            else:
+                self.report({"WARNING"}, "No inpainting workflow detected")
+                return {"CANCELLED"}
         else:
             json_path = (
                 Path(__file__).parent.parent.parent
                 / "workflows"
                 / "controlnet_depth.json"
             )
+
         with open(json_path) as f:
             prompt_workflow_json = f.read()
         prompt_request = json.loads(prompt_workflow_json)

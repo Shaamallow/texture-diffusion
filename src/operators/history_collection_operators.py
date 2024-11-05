@@ -1,9 +1,12 @@
 import functools
 from io import BytesIO
+from typing import Optional
 
 import bpy
 import requests
 from PIL import Image
+
+# pyright: reportAttributeAccessIssue=false
 
 
 def fetch_image(history_item):
@@ -95,6 +98,37 @@ class UpdateHistoryItem(bpy.types.Operator):
         history_item.fetching_attemps = 0
         history_item.mesh = diffusion_props.mesh_objects[0].name
 
+        # TODO:
+        # - add inpainting parameters
+        # - add camera position and orientation parameters
+
+        return {"FINISHED"}
+
+
+class FetchHistoryItem(bpy.types.Operator):
+    """Launch the texture fetching process using the given uuid"""
+
+    bl_idname = "diffusion.fetch_history"
+    bl_label = "Fetch History Item"
+    uuid: bpy.props.StringProperty(name="UUID")
+
+    def get_history_item(self, context: bpy.types.Context) -> Optional[dict]:
+        history_props = context.scene.history_properties
+        for item in history_props.history_collection:
+            if item.uuid == self.uuid:
+                return item
+        return None
+
+    def execute(self, context):
+
+        scene = context.scene
+        history_props = scene.history_properties
+
+        history_item = self.get_history_item(context)
+        if history_item is None:
+            self.report({"ERROR"}, "History item not found")
+            return {"CANCELLED"}
+
         # Add a register on a 1Hz frequency to fetch image result using the id / uuid
         bpy.app.timers.register(
             functools.partial(fetch_image, history_item), first_interval=1.0
@@ -166,9 +200,11 @@ def history_collection_register():
     bpy.utils.register_class(UpdateHistoryItem)
     bpy.utils.register_class(RemoveHistoryItem)
     bpy.utils.register_class(AssignHistoryItem)
+    bpy.utils.register_class(FetchHistoryItem)
 
 
 def history_collection_unregister():
     bpy.utils.unregister_class(UpdateHistoryItem)
     bpy.utils.unregister_class(RemoveHistoryItem)
     bpy.utils.unregister_class(AssignHistoryItem)
+    bpy.utils.unregister_class(FetchHistoryItem)

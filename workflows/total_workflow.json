@@ -7,10 +7,10 @@
       "sampler_name": "euler",
       "scheduler": "normal",
       "denoise": 1,
-      "model": ["23", 0],
+      "model": ["4", 0],
       "positive": ["11", 0],
       "negative": ["7", 0],
-      "latent_image": ["5", 0]
+      "latent_image": ["25", 0]
     },
     "class_type": "KSampler",
     "_meta": {
@@ -24,17 +24,6 @@
     "class_type": "CheckpointLoaderSimple",
     "_meta": {
       "title": "Load Checkpoint"
-    }
-  },
-  "5": {
-    "inputs": {
-      "width": 1024,
-      "height": 1024,
-      "batch_size": 1
-    },
-    "class_type": "EmptyLatentImage",
-    "_meta": {
-      "title": "Empty Latent Image"
     }
   },
   "6": {
@@ -133,14 +122,66 @@
       "weight": 1,
       "start_at": 0,
       "end_at": 1,
-      "weight_type": "standard",
+      "weight_type": "style transfer",
       "model": ["22", 0],
       "ipadapter": ["22", 1],
-      "image": ["16", 0]
+      "image": ["35", 0]
     },
     "class_type": "IPAdapter",
     "_meta": {
       "title": "IPAdapter"
+    }
+  },
+  "25": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "30": {
+    "inputs": {
+      "samples": ["31", 0],
+      "mask": ["33", 0]
+    },
+    "class_type": "SetLatentNoiseMask",
+    "_meta": {
+      "title": "Set Latent Noise Mask"
+    }
+  },
+  "31": {
+    "inputs": {
+      "pixels": ["16", 0],
+      "vae": ["4", 2]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode"
+    }
+  },
+  "33": {
+    "inputs": {
+      "image": "MASK IMAGE",
+      "channel": "red",
+      "upload": "image"
+    },
+    "class_type": "LoadImageMask",
+    "_meta": {
+      "title": "Load Image (as Mask)"
+    }
+  },
+  "35": {
+    "inputs": {
+      "image": "STYLE REF IMAGE",
+      "upload": "image"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
     }
   }
 }

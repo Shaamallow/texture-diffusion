@@ -55,18 +55,20 @@ class DiffusionPanel(bpy.types.Panel):
 
         if diffusion_properties.toggle_inpainting:
             layout.prop(diffusion_properties, "inpainting_mode")
-            layout.prop(diffusion_properties, "toggle_ipadapter")
+            layout.prop(diffusion_properties, "scale_image2image")
 
-            if diffusion_properties.toggle_ipadapter:
-                layout.prop(diffusion_properties, "scale_ipadapter")
-                layout.prop(diffusion_properties, "toggle_instantstyle")
+            # NOTE: Future feature - Inversion for inpainting
 
-            layout.prop(diffusion_properties, "toggle_image2image")
-            if diffusion_properties.toggle_image2image:
-                layout.prop(diffusion_properties, "scale_image2image")
+        layout.prop(diffusion_properties, "toggle_ipadapter")
+        if diffusion_properties.toggle_ipadapter:
+            layout.prop(diffusion_properties, "scale_ipadapter")
+            layout.prop(diffusion_properties, "toggle_instantstyle")
 
         layout.separator()
         layout.operator("diffusion.generate", text="Generate", icon="RENDER_STILL")
+        layout.operator(
+            "diffusion.camera_setup", text="CAMERA TEST", icon="RENDER_STILL"
+        )
 
 
 # Register the panel and properties

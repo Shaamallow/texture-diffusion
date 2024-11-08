@@ -119,7 +119,9 @@ class FetchHistoryItem(bpy.types.Operator):
                 return item
         return None
 
-    def execute(self, context):
+    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+        assert context is not None
+        assert bpy.context is not None
 
         scene = context.scene
         history_props = scene.history_properties

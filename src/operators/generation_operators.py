@@ -1,5 +1,4 @@
 import json
-import os
 import random
 import uuid
 from pathlib import Path
@@ -8,17 +7,6 @@ from urllib import request
 
 import bmesh
 import bpy
-import numpy as np
-import requests
-from PIL import Image
-
-from ..functions.utils import (convert_to_bytes, linear_to_srgb_array,
-                               normalize_array, reverse_color)
-
-# TODO: remove dep on urllib
-# TODO: remove dep on PIL
-# TODO: Add context override for each operator that is called (ie : when applying sutff)
-
 
 # pyright: reportAttributeAccessIssue=false
 
@@ -47,7 +35,11 @@ class ApplyTextureOperator(bpy.types.Operator):
                         return obj
         return None
 
-    def execute(self, context):
+    def execute(self, context: Optional[bpy.types.Context]):
+
+        assert context is not None
+        assert bpy.context is not None
+
         scene = context.scene
         history_props = scene.history_properties
         diffusion_props = scene.diffusion_properties
@@ -238,67 +230,38 @@ class ApplyTextureOperator(bpy.types.Operator):
         return {"FINISHED"}
 
 
-class GenerateDiffusionOperator(bpy.types.Operator):
-    bl_idname = "diffusion.generate"
-    bl_label = "Generate"
+class SendRequestOperator(bpy.types.Operator):
+    """Operator used to send request to the comfyUI backend"""
 
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
+    bl_idname = "diffusion.send_request"
+    bl_label = "Send Request"
+    bl_description = "Send a request to the comfyUI backend to generate the image"
 
-    def send_request(
-        self,
-        scene,
-        depth_image: Image.Image,
-        inpainting_image: Optional[Image.Image],
-        mask_image: Optional[Image.Image],
-        style_image: Optional[Image.Image],
-        uuid_value: str,
-    ):
+    uuid: bpy.props.StringProperty(name="UUID")
+
+    # TODO: change from diffusion props to history item props
+    def get_history_item(self, context: bpy.types.Context) -> Optional[dict]:
+        history_props = context.scene.history_properties
+        for item in history_props.history_collection:
+            if item.uuid == self.uuid:
+                return item
+        return None
+
+    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+        assert context is not None
+        assert bpy.context is not None
+
+        scene = context.scene
         diffusion_props = scene.diffusion_properties
         backend_props = scene.backend_properties
-        output_prefix = f"blender-texture/{uuid_value}_output"
+
+        output_prefix = f"blender-texture/{self.uuid}_output"
         url = backend_props.url
 
-        input_depth_name = f"{uuid_value}_depth.png"
-        input_inpainting_name = f"{uuid_value}_inpainting.png"
-        input_mask_name = f"{uuid_value}_mask.png"
-        input_styleref_name = f"{uuid_value}_styleref.png"
-
-        # Send Depth Image
-        buffer = convert_to_bytes(depth_image)
-        files = {"image": (input_depth_name, buffer, "image/png")}
-
-        data = {
-            "type": "input",
-            "overwrite": "true",
-        }
-        response = requests.post(f"{url}/upload/image", files=files, data=data)
-
-        if response.status_code != 200:
-            print("Error occured while sending depth image")
-            return
-
-        if inpainting_image is not None:
-            buffer = convert_to_bytes(inpainting_image)
-            files = {"image": (input_inpainting_name, buffer, "image/png")}
-            data = {
-                "type": "input",
-                "overwrite": "true",
-            }
-            response = requests.post(f"{url}/upload/image", files=files, data=data)
-
-            if response.status_code != 200:
-                print("Error occured while sending inpainting image")
-                return
-
-        # TODO: Send mask image
-        if mask_image is not None:
-            pass
-
-        # TODO: Send style image
-        if style_image is not None:
-            pass
+        input_depth_name = f"{self.uuid}_depth.png"
+        input_inpainting_name = f"{self.uuid}_inpainting.png"
+        input_mask_name = f"{self.uuid}_mask.png"
+        input_styleref_name = f"{self.uuid}_styleref.png"
 
         # Prepare Request
 
@@ -327,9 +290,6 @@ class GenerateDiffusionOperator(bpy.types.Operator):
         prompt_request["12"]["inputs"]["image"] = input_depth_name
         prompt_request["9"]["inputs"]["filename_prefix"] = output_prefix
 
-        # TODO:
-        # - Update the logic to re-route the inpainting image
-        # - add noising for image to image
         if diffusion_props.toggle_inpainting:
             # Update the latent input to use the mask latent
             prompt_request["16"]["inputs"]["image"] = input_inpainting_name
@@ -337,13 +297,11 @@ class GenerateDiffusionOperator(bpy.types.Operator):
             prompt_request["33"]["inputs"]["image"] = "white_mask.png"
 
             prompt_request["3"]["inputs"]["latent_image"] = ["30", 0]
-
             prompt_request["3"]["inputs"]["denoise"] = diffusion_props.scale_image2image
 
         if diffusion_props.toggle_ipadapter:
             # Update node to use IPAdapter model
             prompt_request["3"]["inputs"]["model"] = ["23", 0]
-
             prompt_request["23"]["inputs"]["weight"] = diffusion_props.scale_ipadapter
 
             if diffusion_props.toggle_instantstyle:
@@ -366,183 +324,7 @@ class GenerateDiffusionOperator(bpy.types.Operator):
 
         print("Request Sent!")
 
-        return
-
-    # Rework as operator as well
-    def check_collection(self, collections):
-        for collection in collections:
-            if collection.name == "Diffusion Camera History":
-                return collection
-        camera_history_collection = bpy.data.collections.new("Diffusion Camera History")
-        bpy.context.scene.collection.children.link(camera_history_collection)
-        return camera_history_collection
-
-    # Main function
-    def execute(self, context):
-        scene = context.scene
-        diffusion_props = scene.diffusion_properties
-        history_props = scene.history_properties
-
-        # Check if any objects have been selected in the diffusion_props.mesh_objects collection
-        if not diffusion_props.mesh_objects:
-            self.report({"WARNING"}, "No objects selected in the Mesh Collection")
-            return {"CANCELLED"}
-
-        # Step 1 & 2: Loop over all available objects in the scene and store their current visibility state
-        original_visibility = {}
-        for obj in scene.objects:
-            original_visibility[obj.name] = obj.hide_render
-
-        # Step 3: Set all objects not in the diffusion_props.mesh_objects collection as hidden for rendering
-        for obj in scene.objects:
-            if obj.name not in [
-                mesh_item.name for mesh_item in diffusion_props.mesh_objects
-            ]:
-                obj.hide_render = True
-            else:
-                obj.hide_render = False
-
-        # Add a camera in Camera History Collection
-        diffusion_history_collection = self.check_collection(scene.collection.children)
-
-        # Increment ID and generate camera with corresponding ID
-        history_props.history_counter += 1
-        ID = history_props.history_counter
-
-        camera_data = bpy.data.cameras.new(name="Camera")
-        camera_object = bpy.data.objects.new(f"Camera {ID}", camera_data)
-        diffusion_history_collection.objects.link(camera_object)
-
-        scene.camera = camera_object
-
-        assert camera_object is not None
-        # Context override
-
-        win = context.window
-        scr = win.screen
-        areas3d = [area for area in scr.areas if area.type == "VIEW_3D"]
-        region = [region for region in areas3d[0].regions if region.type == "WINDOW"]
-
-        with bpy.context.temp_override(window=win, area=areas3d[0], region=region[0]):
-            bpy.ops.view3d.camera_to_view()
-
-        render_image = None
-
-        # Render the viewport for inpainting
-        if diffusion_props.toggle_inpainting:
-            overlay_previous_status = bpy.context.space_data.overlay.show_overlays
-            previous_output_path = context.scene.render.filepath
-            bpy.context.space_data.overlay.show_overlays = False
-
-            # change the output path to have the openGL output
-            save_path = os.path.join(
-                previous_output_path, f"tmp_render_opengl_inpainting_{ID}.png"
-            )
-            context.scene.render.filepath = save_path
-            bpy.ops.render.opengl(write_still=True)
-            bpy.context.space_data.overlay.show_overlays = overlay_previous_status
-
-            context.scene.render.filepath = previous_output_path
-
-            render_image = Image.open(save_path)
-
-        # Render the depthmap
-        scene.use_nodes = True
-        tree = scene.node_tree
-        assert tree is not None
-
-        bpy.context.scene.view_layers["ViewLayer"].use_pass_z = True
-
-        links = tree.links
-
-        # Render Nodes
-        rl = tree.nodes.new("CompositorNodeRLayers")
-        rl.location = 185, 285
-
-        # create output viewer node
-        v = tree.nodes.new("CompositorNodeViewer")
-        v.location = 750, 210
-        v.use_alpha = False
-
-        bpy.data.scenes["Scene"].render.resolution_x = 1024
-        bpy.data.scenes["Scene"].render.resolution_y = 1024
-
-        links.new(rl.outputs["Depth"], v.inputs[0])
-
-        # Compute Render
-        bpy.ops.render.render()
-
-        # get viewer pixels
-        viewer_image = bpy.data.images["Viewer Node"]
-
-        # Process the depthmap
-        if viewer_image.size[0] > 0 and viewer_image.size[1] > 0:
-
-            width, height = viewer_image.size
-            pixels = np.array(viewer_image.pixels[:])  # pyright: ignore
-            arr = pixels.reshape((height, width, 4))
-
-        else:
-            self.report({"ERROR"}, "The Viewer Node does not have any image data")
-            return {"CANCELLED"}
-
-        # Flip X axis and Drop the alpha layer for the depthmap
-        arr = arr[::-1, :, :-1]
-
-        positions = np.unique(arr)
-        if len(positions) <= 2:
-            self.report(
-                {"ERROR"},
-                "No Depth detected, aborting the generation",
-            )
-            return {"CANCELLED"}
-
-        threshold_distance = positions[-2] * 1.05
-
-        arr = np.minimum(arr, threshold_distance)
-        arr = normalize_array(arr)
-        image_array = linear_to_srgb_array(arr)
-        reverse = reverse_color(image_array)
-
-        # Convert to PIL format before sending request
-
-        image = Image.fromarray(reverse)
-        file_path = bpy.data.scenes["Scene"].render.filepath
-        save_path = os.path.join(file_path, f"depth_{ID}.png")
-        image.save(save_path)
-        bpy.data.images.load(save_path, check_existing=True)
-
-        # Clean up
-
-        for obj in scene.objects:
-            if obj.name not in diffusion_history_collection.objects:
-                obj.hide_render = original_visibility[obj.name]
-
-        tree.nodes.remove(rl)
-        tree.nodes.remove(v)
-
-        # Generate an uuid for the request
-        request_uuid = str(uuid.uuid4())
-        print(request_uuid)
-
-        self.send_request(
-            scene,
-            depth_image=image,
-            inpainting_image=render_image,
-            mask_image=None,
-            style_image=None,
-            uuid_value=request_uuid,
-        )
-        # Call operator diffusion.update_history
-        bpy.ops.diffusion.fetch_history(uuid=request_uuid)
-
         return {"FINISHED"}
-
-
-class SendRequestOperator(bpy.types.Operator):
-    """Operator used to send request to the comfyUI backend"""
-
-    pass
 
 
 class ProjectionOperator(bpy.types.Operator):
@@ -574,7 +356,10 @@ class ProjectionOperator(bpy.types.Operator):
                         return obj
         return None
 
-    def execute(self, context: bpy.types.Context) -> set[str]:
+    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+
+        assert context is not None
+
         scene = context.scene
         diffusion_props = scene.diffusion_properties
 
@@ -596,12 +381,14 @@ class ProjectionOperator(bpy.types.Operator):
 
         ### Projection
 
+        # TODO: Edit to remove the partial project, should project entire UV
+        # BUT NEED TO KEEP THE VERTEX PAITNING
         if diffusion_props.toggle_inpainting:
             # Get the current VIEW_3D area and WINDOW region
             view_3d_area = None
             view_3d_region = None
 
-            for area in bpy.context.screen.areas:
+            for area in context.screen.areas:
                 if area.type == "VIEW_3D":
                     view_3d_area = area
                     for region in area.regions:
@@ -621,6 +408,7 @@ class ProjectionOperator(bpy.types.Operator):
             context_override["region"] = view_3d_region
 
             # Create a context override using bpy.context.temp_override()
+            assert bpy.context is not None
             with bpy.context.temp_override(**context_override):
                 # Call the operator with the temporarily overridden context
                 bpy.ops.uv.project_from_view(
@@ -687,7 +475,7 @@ class SetupCameraOperator(bpy.types.Operator):
     bl_description = "Create a camera, align it to current view and set it as active"
 
     @classmethod
-    def poll(cls, context: bpy.types.Context):
+    def poll(cls, context: Optional[bpy.types.Context]):
         """Ensure the operator is called with the right conditions :
         - from a 3D view
         - not in camera view (as we want to setup a new camera for the current view)
@@ -696,6 +484,8 @@ class SetupCameraOperator(bpy.types.Operator):
         NOTE:   Behaviour is subject to be changed later on for better user control
                 with a dedicated "diffusion Camera"
         """
+
+        assert context is not None
 
         space = context.space_data
         if space.type != "VIEW_3D" or space.region_3d.view_perspective == "CAMERA":
@@ -728,10 +518,14 @@ class SetupCameraOperator(bpy.types.Operator):
             if collection.name == "Diffusion Camera History":
                 return collection
         camera_history_collection = bpy.data.collections.new("Diffusion Camera History")
-        bpy.context.scene.collection.children.link(camera_history_collection)
+
+        context = bpy.context
+        assert context is not None
+
+        context.scene.collection.children.link(camera_history_collection)
         return camera_history_collection
 
-    def execute(self, context: bpy.types.Context) -> set[str]:
+    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
         """Blender Operator used to setup the Projection Camera before the rest
         - Create a New Camera Object
         - Align it to the current view
@@ -744,6 +538,8 @@ class SetupCameraOperator(bpy.types.Operator):
 
         - Call Images Operators
         """
+
+        assert context is not None
 
         scene = context.scene
         diffusion_props = scene.diffusion_properties
@@ -816,7 +612,7 @@ class SetupCameraOperator(bpy.types.Operator):
             # bpy.ops.diffusion.render_mask(uuid=generation_uuid)
 
         # CALL REQUESTION OPERATOR
-        # bpy.ops.diffusion.send_request(uuid=generation_uuid)
+        bpy.ops.diffusion.send_request(uuid=generation_uuid)
 
         # Launch a watchdog to get the result
         bpy.ops.diffusion.fetch_history(uuid=generation_uuid)
@@ -828,9 +624,11 @@ def generation_register():
     bpy.utils.register_class(ApplyTextureOperator)
     bpy.utils.register_class(SetupCameraOperator)
     bpy.utils.register_class(ProjectionOperator)
+    bpy.utils.register_class(SendRequestOperator)
 
 
 def generation_unregister():
     bpy.utils.unregister_class(ApplyTextureOperator)
     bpy.utils.unregister_class(SetupCameraOperator)
     bpy.utils.unregister_class(ProjectionOperator)
+    bpy.utils.unregister_class(SendRequestOperator)

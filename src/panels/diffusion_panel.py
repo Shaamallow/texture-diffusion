@@ -65,7 +65,6 @@ class DiffusionPanel(bpy.types.Panel):
             layout.prop(diffusion_properties, "toggle_instantstyle")
 
         layout.separator()
-        layout.operator("diffusion.generate", text="Generate", icon="RENDER_STILL")
         layout.operator(
             "diffusion.camera_setup", text="CAMERA TEST", icon="RENDER_STILL"
         )

@@ -30,7 +30,10 @@ class DepthRenderOperator(bpy.types.Operator):
                 return item
         return None
 
-    def execute(self, context: bpy.types.Context) -> set[str]:
+    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+        assert context is not None
+        assert bpy.context is not None
+
         scene = context.scene
 
         history_item = self.get_history_item(context)
@@ -149,7 +152,10 @@ class ImageRenderOperator(bpy.types.Operator):
                 return item
         return None
 
-    def execute(self, context: bpy.types.Context) -> set[str]:
+    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+        assert context is not None
+        assert bpy.context is not None
+
         scene = context.scene
 
         history_item = self.get_history_item(context)
@@ -177,11 +183,11 @@ class ImageRenderOperator(bpy.types.Operator):
         image = Image.open(save_path)
 
         # TODO: Pop the render view for the loaded image
-        input_depth_name = f"{uuid_value}_depth.png"
+        input_inpainting_name = f"{self.uuid}_inpainting.png"
 
         # Call the sending request function
         response_code = send_image_function(
-            scene=scene, image=image, image_name=input_depth_name
+            scene=scene, image=image, image_name=input_inpainting_name
         )
         if response_code == 200:
             self.report(

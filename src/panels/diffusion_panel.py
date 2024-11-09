@@ -1,4 +1,8 @@
+from typing import Optional
+
 import bpy
+
+# pyright: reportAttributeAccessIssue=false
 
 
 # Define the panel class
@@ -9,8 +13,10 @@ class DiffusionPanel(bpy.types.Panel):
     bl_region_type = "UI"
     bl_category = "Diffusion"
 
-    def draw(self, context):
+    def draw(self, context: Optional[bpy.types.Context]):
+        assert context is not None
         layout = self.layout
+
         scene = context.scene
         diffusion_properties = scene.diffusion_properties
 
@@ -29,7 +35,6 @@ class DiffusionPanel(bpy.types.Panel):
 
         layout.prop(diffusion_properties, "show_advanced")
 
-        # TODO: Turn this into a Advanced Panel using a new class
         if diffusion_properties.show_advanced:
             layout.prop(diffusion_properties, "negative_prompt")
             layout.prop(diffusion_properties, "scheduler")
@@ -49,13 +54,12 @@ class DiffusionPanel(bpy.types.Panel):
             row.label(text=mesh_item.name)
             row.operator("diffusion.remove_mesh", text="", icon="REMOVE").index = i
 
-        # Add a big "Generate" button at the bottom of the panel
         layout.separator()
         layout.prop(diffusion_properties, "toggle_inpainting")
 
         if diffusion_properties.toggle_inpainting:
             layout.prop(diffusion_properties, "inpainting_mode")
-            layout.prop(diffusion_properties, "scale_image2image")
+            layout.prop(diffusion_properties, "denoising_strength")
 
             # NOTE: Future feature - Inversion for inpainting
 
@@ -65,9 +69,7 @@ class DiffusionPanel(bpy.types.Panel):
             layout.prop(diffusion_properties, "toggle_instantstyle")
 
         layout.separator()
-        layout.operator(
-            "diffusion.camera_setup", text="CAMERA TEST", icon="RENDER_STILL"
-        )
+        layout.operator("diffusion.camera_setup", text="GENERATE", icon="RENDER_STILL")
 
 
 # Register the panel and properties

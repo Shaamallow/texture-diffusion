@@ -36,7 +36,6 @@ class ApplyTextureOperator(bpy.types.Operator):
         return None
 
     def execute(self, context: Optional[bpy.types.Context]):
-
         assert context is not None
         assert bpy.context is not None
 
@@ -84,7 +83,7 @@ class ApplyTextureOperator(bpy.types.Operator):
 
             # Set values
             color_mix.data_type = "RGBA"
-            color_attribute.layer_name = f"only selected {self.id}"
+            color_attribute.layer_name = f"mask {self.id}"
             uv_node_new.uv_map = f"Texture {self.id}"
             image_node_new.image = bpy.data.images[f"Generation_{self.id}.png"]
 
@@ -179,7 +178,7 @@ class SendRequestOperator(bpy.types.Operator):
         # Prepare Request
 
         json_path = (
-            Path(__file__).parent.parent.parent / "workflows" / "total_workflow.json"
+            Path(__file__).parent.parent.parent / "workflows" / "sdxl_workflow.json"
         )
         with open(json_path) as f:
             prompt_workflow_json = f.read()
@@ -209,7 +208,7 @@ class SendRequestOperator(bpy.types.Operator):
             prompt_request["33"]["inputs"]["image"] = input_mask_name
 
             prompt_request["3"]["inputs"]["latent_image"] = ["30", 0]
-            prompt_request["3"]["inputs"]["denoise"] = diffusion_props.scale_image2image
+            prompt_request["3"]["inputs"]["denoise"] = diffusion_props.denoising_strength
 
         if diffusion_props.toggle_ipadapter:
             # Update node to use IPAdapter model
@@ -269,7 +268,6 @@ class ProjectionOperator(bpy.types.Operator):
         return None
 
     def execute(self, context: Optional[bpy.types.Context]) -> Set[str]:
-
         assert context is not None
 
         scene = context.scene
@@ -324,22 +322,20 @@ class ProjectionOperator(bpy.types.Operator):
             )
 
             if blending_mode == "blending":
-                collayer = bm.verts.layers.color.new(f"only selected {ID}")
+                collayer = bm.verts.layers.color.new(f"mask {ID}")
                 for v in bm.verts:
                     if v.select:
                         v[collayer] = [0, 0, 0, 1]
 
             elif blending_mode == "hard edges":
-                collayer = bm.loops.layers.color.new(f"only selected {ID}")
+                collayer = bm.loops.layers.color.new(f"mask {ID}")
 
                 for f in bm.faces:
                     if f.select:
                         for l in f.loops:
                             l[collayer] = [0, 0, 0, 1]
 
-            self.report(
-                {"INFO"}, "Partial UV Vertex have been projected and attributes set"
-            )
+            self.report({"INFO"}, "Partial UV Vertex attributes have been set")
 
         return {"FINISHED"}
 

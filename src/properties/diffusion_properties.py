@@ -142,10 +142,10 @@ class DiffusionProperties(bpy.types.PropertyGroup):
         description="Toggle Image2Image",
         default=False,
     )
-    scale_image2image: bpy.props.FloatProperty(
+    denoising_strength: bpy.props.FloatProperty(
         name="Denoising Strength",
         description="Denoising Strength",
-        default=0.0,
+        default=1.0,
         max=1.0,
         min=0.0,
     )

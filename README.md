@@ -42,14 +42,17 @@ Add images for :
 - [Blender](https://www.blender.org/)
 - [BlenderAPI](https://docs.blender.org/api/current/index.html)
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
-- **ME**
+- [ComfyUI IPAdapter Plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus)
 
 # Roadmap
 
-- [ ] Inpainting
+- [x] Inpainting
 - [ ] IP-Adapter
 - [ ] LoRA
-- [ ] Flux Support
+- [ ] Backend Update
+  - [ ] Status Bar
+  - [ ] Fetching timeout
+  - [ ] UI
 - [ ] Progression Bar
 - [ ] Multiple View Generation at once
 - [ ] Replicate

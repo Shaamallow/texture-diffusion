@@ -208,7 +208,9 @@ class SendRequestOperator(bpy.types.Operator):
             prompt_request["33"]["inputs"]["image"] = input_mask_name
 
             prompt_request["3"]["inputs"]["latent_image"] = ["30", 0]
-            prompt_request["3"]["inputs"]["denoise"] = diffusion_props.denoising_strength
+            prompt_request["3"]["inputs"][
+                "denoise"
+            ] = diffusion_props.denoising_strength
 
         if diffusion_props.toggle_ipadapter:
             # Update node to use IPAdapter model

@@ -6,8 +6,12 @@ import bpy
 import numpy as np
 from PIL import Image
 
-from ..functions.utils import (linear_to_srgb_array, normalize_array,
-                               reverse_color, send_image_function)
+from ..functions.utils import (
+    linear_to_srgb_array,
+    normalize_array,
+    reverse_color,
+    send_image_function,
+)
 
 # pyright: reportAttributeAccessIssue=false
 

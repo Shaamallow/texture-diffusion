@@ -1,0 +1,38 @@
+[project]
+name = "texture-diffusion"
+version = "0.1.0"
+description = "A Blender add-on for texture diffusion."
+readme = "README.md"
+authors = [
+    {name = "Eyal Benaroche", email = "eyal.benaroche@gmail.com"}
+]
+license = {file = "LICENSE"}
+keywords = ["blender", "addon", "texture", "diffusion"]
+requires-python = ">=3.10.12"
+
+[project.urls]
+repository = "https://github.com/Shaamallow/texture-diffusion"
+issues = "https://github.com/Shaamallow/texture-diffusion/issues"
+homepage = "https://github.com/Shaamallow/texture-diffusion"
+
+[project.optional-dependencies]
+dev = [
+    "numpy",
+    "bpy",
+    "Pillow",
+    "requests",
+    "fake-bpy-module",
+    "black",
+    "isort"
+]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+

@@ -136,6 +136,7 @@ class DiffusionProperties(bpy.types.PropertyGroup):
         description="Toggle InstantStyle",
         default=False,
     )
+    ip_adapter_image: bpy.props.StringProperty(name="IPAdapter Image", default="")
 
     toggle_image2image: bpy.props.BoolProperty(
         name="Toggle Image2Image",

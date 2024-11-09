@@ -1,5 +1,6 @@
 from io import BytesIO
 
+import bpy
 import numpy as np
 import requests
 from PIL import Image
@@ -35,3 +36,25 @@ def convert_to_bytes(image: Image.Image):
     buffer.seek(0)
 
     return buffer
+
+
+# pyright: reportAttributeAccessIssue=false
+
+
+def send_image_function(scene: bpy.types.Scene, image_name: str, image: Image.Image):
+    """Send the image to the comfyUI backend"""
+
+    backend_props = scene.backend_properties
+    url = backend_props.url
+
+    # Send Image
+    buffer = convert_to_bytes(image)
+    files = {"image": (image_name, buffer, "image/png")}
+
+    data = {
+        "type": "input",
+        "overwrite": "true",
+    }
+    response = requests.post(f"{url}/upload/image", files=files, data=data)
+
+    return response.status_code

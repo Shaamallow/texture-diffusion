@@ -1,9 +1,12 @@
 import functools
 from io import BytesIO
+from typing import Optional
 
 import bpy
 import requests
 from PIL import Image
+
+# pyright: reportAttributeAccessIssue=false
 
 
 def fetch_image(history_item):
@@ -17,36 +20,53 @@ def fetch_image(history_item):
     if history_item.fetching_attempts < 1:
         print(view_image_url)
 
-    params = {"filename": file_name, "subfolder": "blender-texture", "type": "output"}
-    url = f"{base_url}/view"
-    response = requests.get(url, params=params)
+    try:
+        params = {
+            "filename": file_name,
+            "subfolder": "blender-texture",
+            "type": "output",
+        }
+        url = f"{base_url}/view"
+        response = requests.get(url, params=params)
 
-    # Check if the response is successful
-    if response.status_code == 200:
-        # Load the image from the response content
-        print("Image fetched successfully")
-        image = Image.open(BytesIO(response.content))
+        # Check if the response is successful
+        if response.status_code == 200:
+            # Load the image from the response content
+            print("Image fetched successfully")
+            image = Image.open(BytesIO(response.content))
 
-        file_path = bpy.data.scenes["Scene"].render.filepath
-        save_path = f"{file_path}Generation_{history_item.id}.png"
+            file_path = bpy.data.scenes["Scene"].render.filepath
+            save_path = f"{file_path}Generation_{history_item.id}.png"
 
-        print(f"Saving image to {save_path}")
-        image.save(save_path)
-        bpy.data.images.load(save_path, check_existing=True)
+            print(f"Saving image to {save_path}")
+            image.save(save_path)
+            bpy.data.images.load(save_path, check_existing=True)
 
-        print(f"Applying the Texture {history_item.id}")
-        bpy.ops.diffusion.apply_texture(id=history_item.id)
+            print(f"Applying the Texture {history_item.id}")
+            bpy.ops.diffusion.apply_texture(id=history_item.id)
 
-        return
-    else:
-        print(
-            f"Failed to retrieve image. Status code: {response.status_code}. Attempt : {history_item.fetching_attempts}"
-        )
+            return
+
+        else:
+            print(
+                f"Failed to retrieve image. Status code: {response.status_code}. Attempt : {history_item.fetching_attempts}"
+            )
+            history_item.fetching_attempts += 1
+
+            if history_item.fetching_attempts > 40:
+                print("Failed to retrieve image after 40 attempts")
+                return
+            return 1.0
+
+    except OSError as e:
+
+        print(f"Failed to retrieve image. Error: {e}")
         history_item.fetching_attempts += 1
 
         if history_item.fetching_attempts > 40:
             print("Failed to retrieve image after 40 attempts")
             return
+
         return 1.0
 
 
@@ -77,6 +97,39 @@ class UpdateHistoryItem(bpy.types.Operator):
         history_item.url = backend_props.url
         history_item.fetching_attemps = 0
         history_item.mesh = diffusion_props.mesh_objects[0].name
+
+        # TODO:
+        # - add inpainting parameters
+        # - add camera position and orientation parameters
+
+        return {"FINISHED"}
+
+
+class FetchHistoryItem(bpy.types.Operator):
+    """Launch the texture fetching process using the given uuid"""
+
+    bl_idname = "diffusion.fetch_history"
+    bl_label = "Fetch History Item"
+    uuid: bpy.props.StringProperty(name="UUID")
+
+    def get_history_item(self, context: bpy.types.Context) -> Optional[dict]:
+        history_props = context.scene.history_properties
+        for item in history_props.history_collection:
+            if item.uuid == self.uuid:
+                return item
+        return None
+
+    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+        assert context is not None
+        assert bpy.context is not None
+
+        scene = context.scene
+        history_props = scene.history_properties
+
+        history_item = self.get_history_item(context)
+        if history_item is None:
+            self.report({"ERROR"}, "History item not found")
+            return {"CANCELLED"}
 
         # Add a register on a 1Hz frequency to fetch image result using the id / uuid
         bpy.app.timers.register(
@@ -149,9 +202,11 @@ def history_collection_register():
     bpy.utils.register_class(UpdateHistoryItem)
     bpy.utils.register_class(RemoveHistoryItem)
     bpy.utils.register_class(AssignHistoryItem)
+    bpy.utils.register_class(FetchHistoryItem)
 
 
 def history_collection_unregister():
     bpy.utils.unregister_class(UpdateHistoryItem)
     bpy.utils.unregister_class(RemoveHistoryItem)
     bpy.utils.unregister_class(AssignHistoryItem)
+    bpy.utils.unregister_class(FetchHistoryItem)

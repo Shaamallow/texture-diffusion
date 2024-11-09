@@ -11,8 +11,6 @@ class MeshItem(bpy.types.PropertyGroup):
 class DiffusionProperties(bpy.types.PropertyGroup):
 
     # Update the model
-    # NOTE: add watchdog to update the models ONLY every 1 minute
-    # NOTE: change to operators ?
     def update_models(self, context):
 
         base_url = context.scene.backend_properties.url
@@ -108,6 +106,50 @@ class DiffusionProperties(bpy.types.PropertyGroup):
         description="Toggle advanced parameters",
         default=False,
     )
+
+    # Inpainting properties
+    toggle_inpainting: bpy.props.BoolProperty(
+        name="Toggle Inpainting",
+        description="Toggle Inpainting",
+        default=False,
+    )
+    inpainting_mode: bpy.props.EnumProperty(
+        name="Inpainting Mode",
+        description="Inpainting Mode",
+        items=[("blending", "Blending", ""), ("hard edges", "Hard Edges", "")],
+        default="blending",
+    )
+
+    toggle_ipadapter: bpy.props.BoolProperty(
+        name="Toggle IPAdapter",
+        description="Toggle IPAdapter",
+        default=False,
+    )
+    scale_ipadapter: bpy.props.FloatProperty(
+        name="Scale IPAdapter",
+        description="Scale IPAdapter",
+        default=1.0,
+        min=0.0,
+    )
+    toggle_instantstyle: bpy.props.BoolProperty(
+        name="Toggle InstantStyle",
+        description="Toggle InstantStyle",
+        default=False,
+    )
+
+    toggle_image2image: bpy.props.BoolProperty(
+        name="Toggle Image2Image",
+        description="Toggle Image2Image",
+        default=False,
+    )
+    denoising_strength: bpy.props.FloatProperty(
+        name="Denoising Strength",
+        description="Denoising Strength",
+        default=1.0,
+        max=1.0,
+        min=0.0,
+    )
+
     negative_prompt: bpy.props.StringProperty(
         name="Negative Prompt",
         description="Negative text prompt for the diffusion effect",

@@ -42,14 +42,17 @@ Add images for :
 - [Blender](https://www.blender.org/)
 - [BlenderAPI](https://docs.blender.org/api/current/index.html)
 - [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
-- **ME**
+- [ComfyUI IPAdapter Plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus)
 
-# Features Roadmap
+# Roadmap
 
-- Change camera behavior : Diffusion Camera + Camera Selector. Allow lock to view. Need to rework history to :
-  - Save camera position
-  - Assign function = assign textures + Update camera with old position
-- Open render window for depth map estimation AND image generation
-- Support FLUX models (update the comfy Workflow)
-- Add inpainting (for multi texturing) using vertex paint
-- Add option for rendering scene (discard selected mesh and don't apply texture)
+- [x] Inpainting
+- [ ] IP-Adapter
+- [ ] LoRA
+- [ ] Backend Update
+  - [ ] Status Bar
+  - [ ] Fetching timeout
+  - [ ] UI
+- [ ] Progression Bar
+- [ ] Multiple View Generation at once
+- [ ] Replicate

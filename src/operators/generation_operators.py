@@ -54,98 +54,11 @@ class ApplyTextureOperator(bpy.types.Operator):
         mesh_name = history_item.mesh
         mesh = bpy.data.objects[mesh_name]
 
-        # Create a new uv mesh
-        mesh.data.uv_layers.new(name=f"Texture {self.id}")
-
-        # assign the new uv mesh as active
-        mesh.data.uv_layers.active_index = len(mesh.data.uv_layers) - 1
-
-        ### Projection
-
-        inpainting = diffusion_props.toggle_inpainting
-
-        if inpainting:
-            # Get the current VIEW_3D area and WINDOW region
-            view_3d_area = None
-            view_3d_region = None
-
-            for area in bpy.context.screen.areas:
-                if area.type == "VIEW_3D":
-                    view_3d_area = area
-                    for region in area.regions:
-                        if region.type == "WINDOW":
-                            view_3d_region = region
-                            break
-                    if view_3d_region:
-                        break
-
-            if not view_3d_area or not view_3d_region:
-                raise RuntimeError(
-                    "No VIEW_3D area or WINDOW region found, cannot project UV from view."
-                )
-
-            context_override = context.copy()
-            context_override["area"] = view_3d_area
-            context_override["region"] = view_3d_region
-
-            # Create a context override using bpy.context.temp_override()
-            with bpy.context.temp_override(**context_override):
-                # Call the operator with the temporarily overridden context
-                bpy.ops.uv.project_from_view(
-                    camera_bounds=False,
-                    correct_aspect=True,
-                    scale_to_bounds=False,
-                )
-
-                # then add the color attribute automatically
-                # https://blender.stackexchange.com/questions/280716/python-code-to-set-color-attributes-per-vertex-in-blender-3-5
-
-            obj = mesh
-            bm = bmesh.from_edit_mesh(obj.data)
-
-            blending_mode: Literal["blending", "hard edeges"] = (
-                diffusion_props.inpainting_mode
-            )
-
-            if blending_mode == "blending":
-                collayer = bm.verts.layers.color.new(f"only selected {self.id}")
-                for v in bm.verts:
-                    if v.select:
-                        v[collayer] = [0, 0, 0, 1]
-
-            elif blending_mode == "hard edges":
-                collayer = bm.loops.layers.color.new(f"only selected {self.id}")
-
-                for f in bm.faces:
-                    if f.select:
-                        for l in f.loops:
-                            l[collayer] = [0, 0, 0, 1]
-
-        else:
-            # TODO: add override to exit edit mode if in edit mode
-            # Add Projection modifier with mesh and camera
-            modifier = mesh.modifiers.new(name="Projection", type="UV_PROJECT")
-            modifier.uv_layer = f"Texture {self.id}"
-            modifier.projector_count = 1
-
-            # Get the right camera from the diffusion history collection
-            camera = self.find_camera_object(context, scene.collection.children)
-            if camera is None:
-                self.report({"ERROR"}, "No camera found with the given ID")
-                return {"CANCELLED"}
-
-            modifier.projectors[0].object = camera
-
-            # Apply the projection with context override
-            context_override = context.copy()
-            context_override["object"] = mesh
-            with context.temp_override(**context_override):
-                bpy.ops.object.modifier_apply(modifier=modifier.name)
-
         ### Materials and Textures
 
-        if inpainting:
-            material = mesh.data.materials[0]  # supposed to be active material ?
+        if diffusion_props.toggle_inpainting:
+
+            material = mesh.data.materials[0]
             tree = material.node_tree
             nodes = tree.nodes
             links = tree.links
@@ -380,45 +293,29 @@ class ProjectionOperator(bpy.types.Operator):
 
         ### Projection
 
-        # TODO: Edit to remove the partial project, should project entire UV
-        # BUT NEED TO KEEP THE VERTEX PAITNING
+        bpy.ops.object.mode_set(mode="OBJECT")
+        modifier = mesh.modifiers.new(name="Projection", type="UV_PROJECT")
+        modifier.uv_layer = f"Texture {ID}"
+        modifier.projector_count = 1
+
+        # Get the right camera from the diffusion history collection
+        camera = self.get_camera_object(context, ID)
+        if camera is None:
+            self.report({"ERROR"}, "No camera found with the given ID")
+            return {"CANCELLED"}
+
+        modifier.projectors[0].object = camera
+
+        # Apply the projection with context override
+        context_override = context.copy()
+        context_override["object"] = mesh
+        with context.temp_override(**context_override):
+            bpy.ops.object.modifier_apply(modifier=modifier.name)
+
+        self.report({"INFO"}, "FULL UV Vertex have been projected")
         if diffusion_props.toggle_inpainting:
-            # Get the current VIEW_3D area and WINDOW region
-            view_3d_area = None
-            view_3d_region = None
 
-            for area in context.screen.areas:
-                if area.type == "VIEW_3D":
-                    view_3d_area = area
-                    for region in area.regions:
-                        if region.type == "WINDOW":
-                            view_3d_region = region
-                            break
-                    if view_3d_region:
-                        break
-
-            if not view_3d_area or not view_3d_region:
-                raise RuntimeError(
-                    "No VIEW_3D area or WINDOW region found, cannot project UV from view."
-                )
-
-            context_override = context.copy()
-            context_override["area"] = view_3d_area
-            context_override["region"] = view_3d_region
-
-            # Create a context override using bpy.context.temp_override()
-            assert bpy.context is not None
-            with bpy.context.temp_override(**context_override):
-                # Call the operator with the temporarily overridden context
-                bpy.ops.uv.project_from_view(
-                    camera_bounds=False,
-                    correct_aspect=True,
-                    scale_to_bounds=False,
-                )
-
-                # then add the color attribute automatically
-                # https://blender.stackexchange.com/questions/280716/python-code-to-set-color-attributes-per-vertex-in-blender-3-5
-
+            bpy.ops.object.mode_set(mode="EDIT")
             obj = mesh
             bm = bmesh.from_edit_mesh(obj.data)
 
@@ -443,27 +340,6 @@ class ProjectionOperator(bpy.types.Operator):
             self.report(
                 {"INFO"}, "Partial UV Vertex have been projected and attributes set"
             )
-        else:
-            # TODO: use bm instead ?
-            modifier = mesh.modifiers.new(name="Projection", type="UV_PROJECT")
-            modifier.uv_layer = f"Texture {ID}"
-            modifier.projector_count = 1
-
-            # Get the right camera from the diffusion history collection
-            camera = self.get_camera_object(context, ID)
-            if camera is None:
-                self.report({"ERROR"}, "No camera found with the given ID")
-                return {"CANCELLED"}
-
-            modifier.projectors[0].object = camera
-
-            # Apply the projection with context override
-            context_override = context.copy()
-            context_override["object"] = mesh
-            with context.temp_override(**context_override):
-                bpy.ops.object.modifier_apply(modifier=modifier.name)
-
-            self.report({"INFO"}, "FULL UV Vertex have been projected")
 
         return {"FINISHED"}
 

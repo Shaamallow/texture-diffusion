@@ -2,7 +2,7 @@ import json
 import random
 import uuid
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Set
 from urllib import request
 
 import bmesh
@@ -247,7 +247,7 @@ class SendRequestOperator(bpy.types.Operator):
                 return item
         return None
 
-    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+    def execute(self, context: Optional[bpy.types.Context]) -> Set[str]:
         assert context is not None
         assert bpy.context is not None
 
@@ -293,8 +293,7 @@ class SendRequestOperator(bpy.types.Operator):
         if diffusion_props.toggle_inpainting:
             # Update the latent input to use the mask latent
             prompt_request["16"]["inputs"]["image"] = input_inpainting_name
-            # prompt_request["33"]["inputs"]["image"] = input_mask_name
-            prompt_request["33"]["inputs"]["image"] = "white_mask.png"
+            prompt_request["33"]["inputs"]["image"] = input_mask_name
 
             prompt_request["3"]["inputs"]["latent_image"] = ["30", 0]
             prompt_request["3"]["inputs"]["denoise"] = diffusion_props.scale_image2image
@@ -356,7 +355,7 @@ class ProjectionOperator(bpy.types.Operator):
                         return obj
         return None
 
-    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+    def execute(self, context: Optional[bpy.types.Context]) -> Set[str]:
 
         assert context is not None
 
@@ -525,7 +524,7 @@ class SetupCameraOperator(bpy.types.Operator):
         context.scene.collection.children.link(camera_history_collection)
         return camera_history_collection
 
-    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+    def execute(self, context: Optional[bpy.types.Context]) -> Set[str]:
         """Blender Operator used to setup the Projection Camera before the rest
         - Create a New Camera Object
         - Align it to the current view
@@ -609,9 +608,9 @@ class SetupCameraOperator(bpy.types.Operator):
 
         if diffusion_props.toggle_inpainting:
             bpy.ops.diffusion.render_image(uuid=generation_uuid)
-            # bpy.ops.diffusion.render_mask(uuid=generation_uuid)
+            bpy.ops.diffusion.render_mask(uuid=generation_uuid)
 
-        # CALL REQUESTION OPERATOR
+        # CALL REQUEST OPERATOR
         bpy.ops.diffusion.send_request(uuid=generation_uuid)
 
         # Launch a watchdog to get the result

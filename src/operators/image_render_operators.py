@@ -16,6 +16,63 @@ from ..functions.utils import (
 # pyright: reportAttributeAccessIssue=false
 
 
+class IPAdapterImageLoadOpeartor(bpy.types.Operator):
+    """Send the selected image to the backend. Image must be loaded as a blender image before"""
+
+    bl_idname = "diffusion.render_ipadapter_image"
+    bl_label = "Render IpAdapter Image"
+    bl_description = (
+        "Render the IPAdapter image by sending the selected image to the backend"
+    )
+
+    def execute(self, context: Optional[bpy.types.Context]) -> set[str]:
+        assert context is not None
+
+        scene = context.scene
+        diffusion_props = scene.diffusion_properties
+
+        # Load the image
+        img_name = diffusion_props.ip_adapter_image
+        img = bpy.data.images[img_name]
+
+        if img.size[0] > 0 and img.size[1] > 0:
+
+            width, height = img.size
+            pixels = np.array(img.pixels[:])  # pyright: ignore
+            arr = pixels.reshape((height, width, 4))
+        else:
+            self.report({"ERROR"}, "The selected image is invalid")
+            return {"CANCELLED"}
+
+        arr = arr[::-1, :, :-1]
+        arr = (arr[:, :, :3] * 255).astype(np.uint8)
+        image = Image.fromarray(arr)
+
+        # Call the sending request function
+        response_code = send_image_function(
+            scene=scene, image=image, image_name=img_name
+        )
+        if response_code == 200:
+            self.report(
+                {"INFO"},
+                f"IP Adapter Image has been sent to the server successfully",
+            )
+        else:
+            self.report(
+                {"ERROR"},
+                f"Failed to send the image to the server, response code: {response_code}",
+            )
+            return {"CANCELLED"}
+
+        return {"FINISHED"}
+
+    def invoke(self, context: Optional[bpy.types.Context], event):
+        assert context is not None
+
+        context.window_manager.fileselect_add(self)
+        return {"RUNNING_MODAL"}
+
+
 class DepthRenderOperator(bpy.types.Operator):
     """Render the depth map of the current object from the active camera view,
     process it to normalize depth values,and apply color grading to improve visual representation.
@@ -357,9 +414,11 @@ def image_render_register():
     bpy.utils.register_class(DepthRenderOperator)
     bpy.utils.register_class(ImageRenderOperator)
     bpy.utils.register_class(MaskRenderOperator)
+    bpy.utils.register_class(IPAdapterImageLoadOpeartor)
 
 
 def image_render_unregister():
     bpy.utils.unregister_class(DepthRenderOperator)
     bpy.utils.unregister_class(ImageRenderOperator)
     bpy.utils.unregister_class(MaskRenderOperator)
+    bpy.utils.unregister_class(IPAdapterImageLoadOpeartor)

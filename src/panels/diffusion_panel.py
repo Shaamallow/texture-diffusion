@@ -68,6 +68,17 @@ class DiffusionPanel(bpy.types.Panel):
             layout.prop(diffusion_properties, "scale_ipadapter")
             layout.prop(diffusion_properties, "toggle_instantstyle")
 
+            # layout.operator("diffusion.load_ipadapter_image", text="Load Image")
+            layout.operator("image.open", text="Load Image")
+
+            layout.prop_search(
+                diffusion_properties,
+                "ip_adapter_image",
+                bpy.data,
+                "images",
+                text="Select Image",
+            )
+
         layout.separator()
         layout.operator("diffusion.camera_setup", text="GENERATE", icon="RENDER_STILL")
 

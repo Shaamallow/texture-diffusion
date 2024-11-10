@@ -173,7 +173,6 @@ class SendRequestOperator(bpy.types.Operator):
         input_depth_name = f"{self.uuid}_depth.png"
         input_inpainting_name = f"{self.uuid}_inpainting.png"
         input_mask_name = f"{self.uuid}_mask.png"
-        input_styleref_name = f"{self.uuid}_styleref.png"
 
         # Prepare Request
 
@@ -222,7 +221,7 @@ class SendRequestOperator(bpy.types.Operator):
             else:
                 prompt_request["23"]["inputs"]["weight_type"] = "standard"
 
-            prompt_request["35"]["inputs"]["image"] = input_styleref_name
+            prompt_request["35"]["inputs"]["image"] = diffusion_props.ip_adapter_image
 
         # output_name = f"{output_prefix}_output_00001_.png"
         # Add view register using this output_name
@@ -483,6 +482,9 @@ class SetupCameraOperator(bpy.types.Operator):
         if diffusion_props.toggle_inpainting:
             bpy.ops.diffusion.render_image(uuid=generation_uuid)
             bpy.ops.diffusion.render_mask(uuid=generation_uuid)
+
+        if diffusion_props.toggle_ipadapter:
+            bpy.ops.diffusion.render_ipadapter_image()
 
         # CALL REQUEST OPERATOR
         bpy.ops.diffusion.send_request(uuid=generation_uuid)

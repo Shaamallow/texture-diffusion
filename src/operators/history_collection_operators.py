@@ -77,6 +77,7 @@ class UpdateHistoryItem(bpy.types.Operator):
     uuid: bpy.props.StringProperty(name="UUID")
 
     def execute(self, context):
+        assert context is not None
         scene = context.scene
         history_props = scene.history_properties
         diffusion_props = scene.diffusion_properties
@@ -150,10 +151,14 @@ class RemoveHistoryItem(bpy.types.Operator):
             if collection.name == "Diffusion Camera History":
                 return collection
         camera_history_collection = bpy.data.collections.new("Diffusion Camera History")
+        assert bpy.context is not None
+
         bpy.context.scene.collection.children.link(camera_history_collection)
         return camera_history_collection
 
     def execute(self, context):
+        assert context is not None
+
         scene = context.scene
         history_props = scene.history_properties
 
@@ -179,6 +184,8 @@ class AssignHistoryItem(bpy.types.Operator):
     id: bpy.props.IntProperty()
 
     def execute(self, context):
+        assert context is not None
+
         scene = context.scene
         history_props = scene.history_properties
         diffusion_props = scene.diffusion_properties

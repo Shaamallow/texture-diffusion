@@ -1,15 +1,6 @@
 # pyright: reportUnboundVariable=false
 # Need to add the following because of blender reloading behaviour
 
-bl_info = {
-    "name": "Blender Diffusion",
-    "blender": (4, 1, 1),
-    "author": "Shaamallow",
-    "category": "3D View",
-    "version": "0.0.1",
-    "description": "Create textures using Diffusion Models in blender",
-}
-
 if "bpy" in locals():
     # Extra Blender imports to allow reloading
     import importlib

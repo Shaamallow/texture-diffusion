@@ -1,22 +1,22 @@
 schema_version = "1.0.0"
 
-id = "blender_diffusion_texture"
-name = "Diffusion Texture"
+id = "blender_texture_diffusion"
 version = "1.0.1"
-tagline = "A diffusion interface to generate textures in blender"
+name = "Texture Diffusion"
+tagline = "A blender interface to generate textures using diffusion models"
+maintainer = "Eyal Benaroche <eyal.benaroche@gmail.com>"
 type = "add-on"
 
-maintainer = "Eyal Benaroche <eyal.benaroche@gmail.com>"
 website = "https://shaamallow.com"
 tags = ["Render", "Scene"]
 
 blender_version_min = "4.2.0"
 
-license = ["MIT"]
-
-[build]
-paths_exclude_pattern = [
-  "/.git/",
-  "__pycache__/",
-  ".*",
+license = ["SPDX:AGPL-3.0-or-later"]
+copyright = [
+  "2024 Eyal Benaroche",
 ]
+
+[permissions]
+files = "Read/write Images from/to disk"
+network = "Need to send generation requests to backend"

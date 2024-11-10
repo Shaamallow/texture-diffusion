@@ -17,6 +17,8 @@ from ..functions.utils import (
 
 
 class IPAdapterImageLoadOpeartor(bpy.types.Operator):
+    """Send the selected image to the backend. Image must be loaded as a blender image before"""
+
     bl_idname = "diffusion.render_ipadapter_image"
     bl_label = "Render IpAdapter Image"
     bl_description = (

@@ -47,12 +47,12 @@ Add images for :
 # Roadmap
 
 - [x] Inpainting
-- [ ] IP-Adapter
+- [x] IP-Adapter
 - [ ] LoRA
+- [ ] Flux
 - [ ] Backend Update
   - [ ] Status Bar
   - [ ] Fetching timeout
   - [ ] UI
-- [ ] Progression Bar
 - [ ] Multiple View Generation at once
 - [ ] Replicate

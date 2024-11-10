@@ -12,19 +12,13 @@
       "negative": ["7", 0],
       "latent_image": ["25", 0]
     },
-    "class_type": "KSampler",
-    "_meta": {
-      "title": "KSampler"
-    }
+    "class_type": "KSampler"
   },
   "4": {
     "inputs": {
       "ckpt_name": "sd_xl_base_1.0_0.9vae.safetensors"
     },
-    "class_type": "CheckpointLoaderSimple",
-    "_meta": {
-      "title": "Load Checkpoint"
-    }
+    "class_type": "CheckpointLoaderSimple"
   },
   "5": {
     "inputs": {
@@ -64,29 +58,20 @@
       "samples": ["3", 0],
       "vae": ["4", 2]
     },
-    "class_type": "VAEDecode",
-    "_meta": {
-      "title": "VAE Decode"
-    }
+    "class_type": "VAEDecode"
   },
   "9": {
     "inputs": {
       "filename_prefix": "OUTPUT IMAGE NAME",
       "images": ["8", 0]
     },
-    "class_type": "SaveImage",
-    "_meta": {
-      "title": "Save Image"
-    }
+    "class_type": "SaveImage"
   },
   "10": {
     "inputs": {
       "control_net_name": "diffusers_depth_controlnet_pytorch_model.fp16.safetensors"
     },
-    "class_type": "ControlNetLoader",
-    "_meta": {
-      "title": "Load ControlNet Model"
-    }
+    "class_type": "ControlNetLoader"
   },
   "11": {
     "inputs": {
@@ -95,40 +80,28 @@
       "control_net": ["10", 0],
       "image": ["12", 0]
     },
-    "class_type": "ControlNetApply",
-    "_meta": {
-      "title": "Apply ControlNet"
-    }
+    "class_type": "ControlNetApply"
   },
   "12": {
     "inputs": {
       "image": "DEPTH MAP IMAGE",
       "upload": "image"
     },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "Load Image"
-    }
+    "class_type": "LoadImage"
   },
   "16": {
     "inputs": {
       "image": "INPAINTING IMAGE",
       "upload": "image"
     },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "Load Image"
-    }
+    "class_type": "LoadImage"
   },
   "22": {
     "inputs": {
       "preset": "STANDARD (medium strength)",
       "model": ["4", 0]
     },
-    "class_type": "IPAdapterUnifiedLoader",
-    "_meta": {
-      "title": "IPAdapter Unified Loader"
-    }
+    "class_type": "IPAdapterUnifiedLoader"
   },
   "23": {
     "inputs": {
@@ -151,30 +124,21 @@
       "height": 1024,
       "batch_size": 1
     },
-    "class_type": "EmptyLatentImage",
-    "_meta": {
-      "title": "Empty Latent Image"
-    }
+    "class_type": "EmptyLatentImage"
   },
   "30": {
     "inputs": {
       "samples": ["31", 0],
       "mask": ["33", 0]
     },
-    "class_type": "SetLatentNoiseMask",
-    "_meta": {
-      "title": "Set Latent Noise Mask"
-    }
+    "class_type": "SetLatentNoiseMask"
   },
   "31": {
     "inputs": {
       "pixels": ["16", 0],
       "vae": ["4", 2]
     },
-    "class_type": "VAEEncode",
-    "_meta": {
-      "title": "VAE Encode"
-    }
+    "class_type": "VAEEncode"
   },
   "33": {
     "inputs": {
@@ -182,19 +146,13 @@
       "channel": "red",
       "upload": "image"
     },
-    "class_type": "LoadImageMask",
-    "_meta": {
-      "title": "Load Image (as Mask)"
-    }
+    "class_type": "LoadImageMask"
   },
   "35": {
     "inputs": {
       "image": "STYLE REF IMAGE",
       "upload": "image"
     },
-    "class_type": "LoadImage",
-    "_meta": {
-      "title": "Load Image"
-    }
+    "class_type": "LoadImage"
   }
 }

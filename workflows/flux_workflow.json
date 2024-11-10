@@ -1,0 +1,92 @@
+{
+  "3": {
+    "inputs": {
+      "seed": 42,
+      "steps": 20,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "denoise": 1,
+      "model": ["4", 0],
+      "positive": ["11", 0],
+      "negative": ["11", 1],
+      "latent_image": ["25", 0]
+    },
+    "class_type": "KSampler"
+  },
+  "4": {
+    "inputs": {
+      "ckpt_name": "flux1-dev-fp8.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple"
+  },
+  "6": {
+    "inputs": {
+      "text": "POSITIVE PROMPT",
+      "clip": ["4", 1]
+    },
+    "class_type": "CLIPTextEncode"
+  },
+  "5": {
+    "inputs": {
+      "guidance": 3.5,
+      "conditioning": ["6", 0]
+    },
+    "class_type": "FluxGuidance"
+  },
+  "7": {
+    "inputs": {
+      "text": "",
+      "clip": ["4", 1]
+    },
+    "class_type": "CLIPTextEncode"
+  },
+  "8": {
+    "inputs": {
+      "samples": ["3", 0],
+      "vae": ["4", 2]
+    },
+    "class_type": "VAEDecode"
+  },
+  "9": {
+    "inputs": {
+      "filename_prefix": "OUTPUT IMAGE NAME",
+      "images": ["8", 0]
+    },
+    "class_type": "SaveImage"
+  },
+  "10": {
+    "inputs": {
+      "control_net_name": "flux-depth-controlnet-v3.safetensors"
+    },
+    "class_type": "ControlNetLoader"
+  },
+  "11": {
+    "inputs": {
+      "strength": 1,
+      "start_percent": 0,
+      "end_percent": 1,
+      "positive": ["5", 0],
+      "negative": ["7", 0],
+      "control_net": ["10", 0],
+      "image": ["12", 0],
+      "vae": ["4", 2]
+    },
+    "class_type": "ControlNetApplyAdvanced"
+  },
+  "12": {
+    "inputs": {
+      "image": "DEPTH MAP IMAGE",
+      "upload": "image"
+    },
+    "class_type": "LoadImage"
+  },
+  "25": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "class_type": "EmptySD3LatentImage"
+  }
+}

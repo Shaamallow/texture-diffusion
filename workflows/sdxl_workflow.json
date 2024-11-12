@@ -26,24 +26,37 @@
       "title": "Load Checkpoint"
     }
   },
+  "5": {
+    "inputs": {
+      "lora_name": "",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": ["4", 0],
+      "clip": ["4", 1]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
   "6": {
     "inputs": {
-      "text": "POSITIVE PROMPT",
+      "text": "",
       "clip": ["4", 1]
     },
     "class_type": "CLIPTextEncode",
     "_meta": {
-      "title": "CLIP Text Encode (Prompt)"
+      "title": "POSITIVE PROMPT"
     }
   },
   "7": {
     "inputs": {
-      "text": "NEGATIVE PROMPT",
+      "text": "",
       "clip": ["4", 1]
     },
     "class_type": "CLIPTextEncode",
     "_meta": {
-      "title": "CLIP Text Encode (Prompt)"
+      "title": "NEGATIVE PROMPT"
     }
   },
   "8": {

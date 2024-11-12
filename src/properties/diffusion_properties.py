@@ -37,20 +37,19 @@ class DiffusionProperties(bpy.types.PropertyGroup):
         route = "/models/loras"
         response = requests.get(f"{base_url}{route}")
 
+        output = [("None", "None", "")]
         if response.status_code == 200:
             loras: List[str] = response.json()
             loras_list = [
                 (
-                    lora.replace(".safetensors", ""),
+                    lora,
                     lora.replace(".safetensors", ""),
                     "",
                 )
                 for lora in loras
             ]
-            loras_list.append(("None", "None", ""))
-        else:
-            loras_list = []
-        return loras_list
+            output += loras_list
+        return output
 
     mesh_objects: bpy.props.CollectionProperty(type=MeshItem)
 
@@ -64,7 +63,14 @@ class DiffusionProperties(bpy.types.PropertyGroup):
         name="Loras",
         description="Pick a lora from the available loras you have downloaded",
         items=update_loras,
-        default=None,
+        default=0,
+    )
+    lora_scale: bpy.props.FloatProperty(
+        name="Lora Scale",
+        description="Weight for the lora",
+        default=1.0,
+        min=0.0,
+        max=3.0,
     )
 
     # Properties for the diffusion generation
@@ -101,10 +107,41 @@ class DiffusionProperties(bpy.types.PropertyGroup):
         description="Toggle random seed for generationg",
         default=False,
     )
-    show_advanced: bpy.props.BoolProperty(
-        name="Show Advanced Parameters",
-        description="Toggle advanced parameters",
-        default=False,
+    sampler_name: bpy.props.EnumProperty(
+        name="Sampler Name",
+        description="Sampler Name",
+        items=[
+            ("euler", "Euler", ""),
+            ("euler_cfg_pp", "Euler CFG PP", ""),
+            ("euler_ancestral", "Euler Ancestral", ""),
+            ("euler_ancestral_cfg_pp", "Euler Ancestral CFG PP", ""),
+            ("heun", "Heun", ""),
+            ("heunpp2", "Heun PP2", ""),
+            ("dpm_2", "DPM 2", ""),
+            ("dpm_2_ancestral", "DPM 2 Ancestral", ""),
+            ("lms", "LMS", ""),
+            ("dpm_fast", "DPM Fast", ""),
+            ("dpm_adaptive", "DPM Adaptive", ""),
+            ("dpmpp_2s_ancestral", "DPM++ 2S Ancestral", ""),
+            ("dpmpp_2s_ancestral_cfg_pp", "DPM++ 2S Ancestral CFG PP", ""),
+            ("dpmpp_sde", "DPM++ SDE", ""),
+            ("dpmpp_sde_gpu", "DPM++ SDE GPU", ""),
+            ("dpmpp_2m", "DPM++ 2M", ""),
+            ("dpmpp_2m_cfg_pp", "DPM++ 2M CFG PP", ""),
+            ("dpmpp_2m_sde", "DPM++ 2M SDE", ""),
+            ("dpmpp_2m_sde_gpu", "DPM++ 2M SDE GPU", ""),
+            ("dpmpp_3m_sde", "DPM++ 3M SDE", ""),
+            ("dpmpp_3m_sde_gpu", "DPM++ 3M SDE GPU", ""),
+            ("ddpm", "DDPM", ""),
+            ("lcm", "LCM", ""),
+            ("ipndm", "IPNDM", ""),
+            ("ipndm_v", "IPNDM V", ""),
+            ("deis", "DEIS", ""),
+            ("ddim", "DDIM", ""),
+            ("uni_pc", "Uni PC", ""),
+            ("uni_pc_bh2", "Uni PC BH2", ""),
+        ],
+        default="euler",
     )
 
     # Inpainting properties
@@ -159,8 +196,17 @@ class DiffusionProperties(bpy.types.PropertyGroup):
     scheduler: bpy.props.EnumProperty(
         name="Scheduler",
         description="Scheduler for the diffusion process",
-        items=[("DDIM", "DDIM", ""), ("DDPM", "DDPM", ""), ("LCM", "LCM", "")],
-        default="DDIM",
+        items=[
+            ("normal", "Normal", ""),
+            ("karras", "Karras", ""),
+            ("exponential", "Exponential", ""),
+            ("sgm_uniform", "SGM Uniform", ""),
+            ("simple", "Simple", ""),
+            ("ddim_uniform", "DDIM Uniform", ""),
+            ("beta", "Beta", ""),
+            ("linear_quadratic", "Linear Quadratic", ""),
+        ],
+        default="normal",
     )
 
     height: bpy.props.IntProperty(

@@ -194,6 +194,9 @@ class SendRequestOperator(bpy.types.Operator):
         prompt_request["3"]["inputs"]["seed"] = seed
         prompt_request["3"]["inputs"]["cfg"] = diffusion_props.cfg_scale
         prompt_request["3"]["inputs"]["steps"] = diffusion_props.n_steps
+        prompt_request["3"]["inputs"]["sampler_name"] = diffusion_props.sampler_name
+        prompt_request["3"]["inputs"]["scheduler"] = diffusion_props.scheduler
+
         prompt_request["11"]["inputs"]["strength"] = diffusion_props.controlnet_scale
 
         # Input-Output Name format
@@ -210,6 +213,14 @@ class SendRequestOperator(bpy.types.Operator):
             prompt_request["3"]["inputs"][
                 "denoise"
             ] = diffusion_props.denoising_strength
+
+        if diffusion_props.loras_available != "None":
+            prompt_request["3"]["inputs"]["model"] = ["5", 0]
+            prompt_request["5"]["inputs"]["lora_name"] = diffusion_props.loras_available
+            prompt_request["6"]["inputs"]["clip"] = ["5", 1]
+            prompt_request["7"]["inputs"]["clip"] = ["5", 1]
+
+            prompt_request["22"]["inputs"]["model"] = ["5", 0]
 
         if diffusion_props.toggle_ipadapter:
             # Update node to use IPAdapter model

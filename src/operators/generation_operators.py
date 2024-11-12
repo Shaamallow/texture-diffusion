@@ -217,6 +217,7 @@ class SendRequestOperator(bpy.types.Operator):
         if diffusion_props.loras_available != "None":
             prompt_request["3"]["inputs"]["model"] = ["5", 0]
             prompt_request["5"]["inputs"]["lora_name"] = diffusion_props.loras_available
+            prompt_request["5"]["inputs"]["strength_model"] = diffusion_props.lora_scale
             prompt_request["6"]["inputs"]["clip"] = ["5", 1]
             prompt_request["7"]["inputs"]["clip"] = ["5", 1]
 

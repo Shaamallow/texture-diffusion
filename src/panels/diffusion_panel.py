@@ -72,6 +72,10 @@ class AdvancedDiffusionPanel(bpy.types.Panel):
 
         layout.separator()
 
+        layout.prop(diffusion_properties, "clip_skip")
+
+        layout.separator()
+
         layout.prop(diffusion_properties, "controlnet_scale")
 
 

@@ -48,11 +48,9 @@ Add images for :
 
 - [x] Inpainting
 - [x] IP-Adapter
-- [ ] LoRA
-- [ ] Flux
+- [x] LoRA
+- [x] Flux
 - [ ] Backend Update
   - [ ] Status Bar
   - [ ] Fetching timeout
   - [ ] UI
-- [ ] Multiple View Generation at once
-- [ ] Replicate

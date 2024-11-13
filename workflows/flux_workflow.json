@@ -5,7 +5,7 @@
       "strength_model": 1,
       "strength_clip": 1,
       "model": ["4", 0],
-      "clip": ["36", 1]
+      "clip": ["4", 1]
     },
     "class_type": "LoraLoader",
     "_meta": {
@@ -15,28 +15,35 @@
   "3": {
     "inputs": {
       "seed": 42,
-      "steps": 30,
-      "cfg": 5,
+      "steps": 20,
+      "cfg": 1,
       "sampler_name": "euler",
       "scheduler": "normal",
       "denoise": 1,
       "model": ["4", 0],
       "positive": ["11", 0],
-      "negative": ["7", 0],
+      "negative": ["11", 1],
       "latent_image": ["25", 0]
     },
     "class_type": "KSampler"
   },
   "4": {
     "inputs": {
-      "ckpt_name": "sd_xl_base_1.0_0.9vae.safetensors"
+      "ckpt_name": "flux1-dev-fp8.safetensors"
     },
     "class_type": "CheckpointLoaderSimple"
   },
+  "5": {
+    "inputs": {
+      "guidance": 3.5,
+      "conditioning": ["6", 0]
+    },
+    "class_type": "FluxGuidance"
+  },
   "6": {
     "inputs": {
-      "text": "",
-      "clip": ["36", 0]
+      "text": "POSITIVE PROMPT",
+      "clip": ["4", 1]
     },
     "class_type": "CLIPTextEncode",
     "_meta": {
@@ -46,7 +53,7 @@
   "7": {
     "inputs": {
       "text": "",
-      "clip": ["36", 0]
+      "clip": ["4", 1]
     },
     "class_type": "CLIPTextEncode",
     "_meta": {
@@ -69,18 +76,22 @@
   },
   "10": {
     "inputs": {
-      "control_net_name": "diffusers_depth_controlnet_pytorch_model.fp16.safetensors"
+      "control_net_name": "flux-depth-controlnet-v3.safetensors"
     },
     "class_type": "ControlNetLoader"
   },
   "11": {
     "inputs": {
       "strength": 1,
-      "conditioning": ["6", 0],
+      "start_percent": 0,
+      "end_percent": 1,
+      "positive": ["5", 0],
+      "negative": ["7", 0],
       "control_net": ["10", 0],
-      "image": ["12", 0]
+      "image": ["12", 0],
+      "vae": ["4", 2]
     },
-    "class_type": "ControlNetApply"
+    "class_type": "ControlNetApplyAdvanced"
   },
   "12": {
     "inputs": {
@@ -96,35 +107,13 @@
     },
     "class_type": "LoadImage"
   },
-  "22": {
-    "inputs": {
-      "preset": "STANDARD (medium strength)",
-      "model": ["4", 0]
-    },
-    "class_type": "IPAdapterUnifiedLoader"
-  },
-  "23": {
-    "inputs": {
-      "weight": 1,
-      "start_at": 0,
-      "end_at": 1,
-      "weight_type": "style transfer",
-      "model": ["22", 0],
-      "ipadapter": ["22", 1],
-      "image": ["35", 0]
-    },
-    "class_type": "IPAdapter",
-    "_meta": {
-      "title": "IPAdapter"
-    }
-  },
   "25": {
     "inputs": {
       "width": 1024,
       "height": 1024,
       "batch_size": 1
     },
-    "class_type": "EmptyLatentImage"
+    "class_type": "EmptySD3LatentImage"
   },
   "30": {
     "inputs": {
@@ -154,15 +143,5 @@
       "upload": "image"
     },
     "class_type": "LoadImage"
-  },
-  "36": {
-    "inputs": {
-      "stop_at_clip_layer": -1,
-      "clip": ["4", 1]
-    },
-    "class_type": "CLIPSetLastLayer",
-    "_meta": {
-      "title": "CLIP Set Last Layer"
-    }
   }
 }

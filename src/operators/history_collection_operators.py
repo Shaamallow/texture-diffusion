@@ -53,8 +53,8 @@ def fetch_image(history_item):
             )
             history_item.fetching_attempts += 1
 
-            if history_item.fetching_attempts > 40:
-                print("Failed to retrieve image after 40 attempts")
+            if history_item.fetching_attempts > 60:
+                print("Failed to retrieve image after 60 attempts")
                 return
             return 1.0
 
@@ -63,8 +63,8 @@ def fetch_image(history_item):
         print(f"Failed to retrieve image. Error: {e}")
         history_item.fetching_attempts += 1
 
-        if history_item.fetching_attempts > 40:
-            print("Failed to retrieve image after 40 attempts")
+        if history_item.fetching_attempts > 60:
+            print("Failed to retrieve image after 60 attempts")
             return
 
         return 1.0

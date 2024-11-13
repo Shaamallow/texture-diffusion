@@ -176,9 +176,19 @@ class SendRequestOperator(bpy.types.Operator):
 
         # Prepare Request
 
-        json_path = (
-            Path(__file__).parent.parent.parent / "workflows" / "sdxl_workflow.json"
-        )
+        model_name = diffusion_props.models_available
+
+        is_flux = "flux" in model_name.lower()
+
+        if is_flux:
+            json_path = (
+                Path(__file__).parent.parent.parent / "workflows" / "flux_workflow.json"
+            )
+        else:
+            json_path = (
+                Path(__file__).parent.parent.parent / "workflows" / "sdxl_workflow.json"
+            )
+
         with open(json_path) as f:
             prompt_workflow_json = f.read()
         prompt_request = json.loads(prompt_workflow_json)
@@ -192,7 +202,13 @@ class SendRequestOperator(bpy.types.Operator):
 
         prompt_request["6"]["inputs"]["text"] = diffusion_props.prompt
         prompt_request["3"]["inputs"]["seed"] = seed
-        prompt_request["3"]["inputs"]["cfg"] = diffusion_props.cfg_scale
+        prompt_request["4"]["inputs"]["ckpt_name"] = diffusion_props.models_available
+
+        if is_flux:
+            prompt_request["5"]["inputs"]["guidance"] = diffusion_props.cfg_scale
+        else:
+            prompt_request["3"]["inputs"]["cfg"] = diffusion_props.cfg_scale
+
         prompt_request["3"]["inputs"]["steps"] = diffusion_props.n_steps
         prompt_request["3"]["inputs"]["sampler_name"] = diffusion_props.sampler_name
         prompt_request["3"]["inputs"]["scheduler"] = diffusion_props.scheduler
@@ -204,6 +220,13 @@ class SendRequestOperator(bpy.types.Operator):
         prompt_request["12"]["inputs"]["image"] = input_depth_name
         prompt_request["9"]["inputs"]["filename_prefix"] = output_prefix
 
+        if diffusion_props.loras_available != "None":
+            prompt_request["3"]["inputs"]["model"] = ["2", 0]
+            prompt_request["2"]["inputs"]["lora_name"] = diffusion_props.loras_available
+            prompt_request["2"]["inputs"]["strength_model"] = diffusion_props.lora_scale
+            prompt_request["6"]["inputs"]["clip"] = ["2", 1]
+            prompt_request["7"]["inputs"]["clip"] = ["2", 1]
+
         if diffusion_props.toggle_inpainting:
             # Update the latent input to use the mask latent
             prompt_request["16"]["inputs"]["image"] = input_inpainting_name
@@ -214,29 +237,34 @@ class SendRequestOperator(bpy.types.Operator):
                 "denoise"
             ] = diffusion_props.denoising_strength
 
-        if diffusion_props.loras_available != "None":
-            prompt_request["3"]["inputs"]["model"] = ["5", 0]
-            prompt_request["5"]["inputs"]["lora_name"] = diffusion_props.loras_available
-            prompt_request["5"]["inputs"]["strength_model"] = diffusion_props.lora_scale
-            prompt_request["6"]["inputs"]["clip"] = ["5", 1]
-            prompt_request["7"]["inputs"]["clip"] = ["5", 1]
+        if not is_flux:
+            # SDXL specific : currently IPAdapter, ClipSkip
 
-            prompt_request["22"]["inputs"]["model"] = ["5", 0]
+            prompt_request["36"]["inputs"][
+                "stop_at_clip_layer"
+            ] = diffusion_props.clip_skip
 
-        if diffusion_props.toggle_ipadapter:
-            # Update node to use IPAdapter model
-            prompt_request["3"]["inputs"]["model"] = ["23", 0]
-            prompt_request["23"]["inputs"]["weight"] = diffusion_props.scale_ipadapter
+            if diffusion_props.loras_available != "None":
+                prompt_request["22"]["inputs"]["model"] = ["2", 0]
 
-            if diffusion_props.toggle_instantstyle:
-                prompt_request["23"]["inputs"]["weight_type"] = "style transfer"
-            else:
-                prompt_request["23"]["inputs"]["weight_type"] = "standard"
+            if diffusion_props.toggle_ipadapter:
+                # Update node to use IPAdapter model
+                prompt_request["3"]["inputs"]["model"] = ["23", 0]
+                prompt_request["23"]["inputs"][
+                    "weight"
+                ] = diffusion_props.scale_ipadapter
 
-            prompt_request["35"]["inputs"]["image"] = diffusion_props.ip_adapter_image
+                if diffusion_props.toggle_instantstyle:
+                    prompt_request["23"]["inputs"]["weight_type"] = "style transfer"
+                else:
+                    prompt_request["23"]["inputs"]["weight_type"] = "standard"
 
-        # output_name = f"{output_prefix}_output_00001_.png"
-        # Add view register using this output_name
+                prompt_request["35"]["inputs"][
+                    "image"
+                ] = diffusion_props.ip_adapter_image
+
+            # output_name = f"{output_prefix}_output_00001_.png"
+            # Add view register using this output_name
 
         # TODO: Pop the render view for the Depth image
 

@@ -100,6 +100,13 @@
     },
     "class_type": "LoadImage"
   },
+  "16": {
+    "inputs": {
+      "image": "INPAINTING IMAGE",
+      "upload": "image"
+    },
+    "class_type": "LoadImage"
+  },
   "25": {
     "inputs": {
       "width": 1024,
@@ -107,5 +114,34 @@
       "batch_size": 1
     },
     "class_type": "EmptySD3LatentImage"
+  },
+  "30": {
+    "inputs": {
+      "samples": ["31", 0],
+      "mask": ["33", 0]
+    },
+    "class_type": "SetLatentNoiseMask"
+  },
+  "31": {
+    "inputs": {
+      "pixels": ["16", 0],
+      "vae": ["4", 2]
+    },
+    "class_type": "VAEEncode"
+  },
+  "33": {
+    "inputs": {
+      "image": "MASK IMAGE",
+      "channel": "red",
+      "upload": "image"
+    },
+    "class_type": "LoadImageMask"
+  },
+  "35": {
+    "inputs": {
+      "image": "STYLE REF IMAGE",
+      "upload": "image"
+    },
+    "class_type": "LoadImage"
   }
 }

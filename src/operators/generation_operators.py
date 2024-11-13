@@ -227,22 +227,22 @@ class SendRequestOperator(bpy.types.Operator):
             prompt_request["6"]["inputs"]["clip"] = ["2", 1]
             prompt_request["7"]["inputs"]["clip"] = ["2", 1]
 
+        if diffusion_props.toggle_inpainting:
+            # Update the latent input to use the mask latent
+            prompt_request["16"]["inputs"]["image"] = input_inpainting_name
+            prompt_request["33"]["inputs"]["image"] = input_mask_name
+
+            prompt_request["3"]["inputs"]["latent_image"] = ["30", 0]
+            prompt_request["3"]["inputs"][
+                "denoise"
+            ] = diffusion_props.denoising_strength
+
         if not is_flux:
-            # SDXL specific : currently IPAdapter, Inpainting, ClipSkip
+            # SDXL specific : currently IPAdapter, ClipSkip
 
             prompt_request["36"]["inputs"][
                 "stop_at_clip_layer"
             ] = diffusion_props.clip_skip
-
-            if diffusion_props.toggle_inpainting:
-                # Update the latent input to use the mask latent
-                prompt_request["16"]["inputs"]["image"] = input_inpainting_name
-                prompt_request["33"]["inputs"]["image"] = input_mask_name
-
-                prompt_request["3"]["inputs"]["latent_image"] = ["30", 0]
-                prompt_request["3"]["inputs"][
-                    "denoise"
-                ] = diffusion_props.denoising_strength
 
             if diffusion_props.loras_available != "None":
                 prompt_request["22"]["inputs"]["model"] = ["2", 0]

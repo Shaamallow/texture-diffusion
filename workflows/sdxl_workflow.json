@@ -5,7 +5,7 @@
       "strength_model": 1,
       "strength_clip": 1,
       "model": ["4", 0],
-      "clip": ["4", 1]
+      "clip": ["36", 1]
     },
     "class_type": "LoraLoader",
     "_meta": {
@@ -36,7 +36,7 @@
   "6": {
     "inputs": {
       "text": "",
-      "clip": ["4", 1]
+      "clip": ["36", 0]
     },
     "class_type": "CLIPTextEncode",
     "_meta": {
@@ -46,7 +46,7 @@
   "7": {
     "inputs": {
       "text": "",
-      "clip": ["4", 1]
+      "clip": ["36", 0]
     },
     "class_type": "CLIPTextEncode",
     "_meta": {
@@ -154,5 +154,15 @@
       "upload": "image"
     },
     "class_type": "LoadImage"
+  },
+  "36": {
+    "inputs": {
+      "stop_at_clip_layer": -1,
+      "clip": ["4", 1]
+    },
+    "class_type": "CLIPSetLastLayer",
+    "_meta": {
+      "title": "CLIP Set Last Layer"
+    }
   }
 }

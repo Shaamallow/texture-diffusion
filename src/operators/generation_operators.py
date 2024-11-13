@@ -177,7 +177,10 @@ class SendRequestOperator(bpy.types.Operator):
         # Prepare Request
 
         model_name = diffusion_props.models_available
-        if "flux" in model_name:
+
+        is_flux = "flux" in model_name.lower()
+
+        if is_flux:
             json_path = (
                 Path(__file__).parent.parent.parent / "workflows" / "flux_workflow.json"
             )
@@ -199,8 +202,9 @@ class SendRequestOperator(bpy.types.Operator):
 
         prompt_request["6"]["inputs"]["text"] = diffusion_props.prompt
         prompt_request["3"]["inputs"]["seed"] = seed
+        prompt_request["4"]["inputs"]["ckpt_name"] = diffusion_props.models_available
 
-        if "flux" in model_name:
+        if is_flux:
             prompt_request["5"]["inputs"]["guidance"] = diffusion_props.cfg_scale
         else:
             prompt_request["3"]["inputs"]["cfg"] = diffusion_props.cfg_scale
@@ -223,7 +227,12 @@ class SendRequestOperator(bpy.types.Operator):
             prompt_request["6"]["inputs"]["clip"] = ["2", 1]
             prompt_request["7"]["inputs"]["clip"] = ["2", 1]
 
-        if "flux" not in model_name:
+        if not is_flux:
+            # SDXL specific : currently IPAdapter, Inpainting, ClipSkip
+
+            prompt_request["36"]["inputs"][
+                "stop_at_clip_layer"
+            ] = diffusion_props.clip_skip
 
             if diffusion_props.toggle_inpainting:
                 # Update the latent input to use the mask latent

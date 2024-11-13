@@ -21,7 +21,7 @@ class DiffusionProperties(bpy.types.PropertyGroup):
             models: List[str] = response.json()
             models_list = [
                 (
-                    model.replace(".safetensors", ""),
+                    model,
                     model.replace(".safetensors", ""),
                     "",
                 )
@@ -207,6 +207,10 @@ class DiffusionProperties(bpy.types.PropertyGroup):
             ("linear_quadratic", "Linear Quadratic", ""),
         ],
         default="normal",
+    )
+
+    clip_skip: bpy.props.IntProperty(
+        name="Clip Skip", description="Clip Skip", min=-24, max=-1, default=-1
     )
 
     height: bpy.props.IntProperty(

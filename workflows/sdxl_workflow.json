@@ -1,4 +1,17 @@
 {
+  "2": {
+    "inputs": {
+      "lora_name": "",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": ["4", 0],
+      "clip": ["4", 1]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
   "3": {
     "inputs": {
       "seed": 42,
@@ -19,19 +32,6 @@
       "ckpt_name": "sd_xl_base_1.0_0.9vae.safetensors"
     },
     "class_type": "CheckpointLoaderSimple"
-  },
-  "5": {
-    "inputs": {
-      "lora_name": "",
-      "strength_model": 1,
-      "strength_clip": 1,
-      "model": ["4", 0],
-      "clip": ["4", 1]
-    },
-    "class_type": "LoraLoader",
-    "_meta": {
-      "title": "Load LoRA"
-    }
   },
   "6": {
     "inputs": {

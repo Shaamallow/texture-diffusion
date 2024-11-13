@@ -216,6 +216,13 @@ class SendRequestOperator(bpy.types.Operator):
         prompt_request["12"]["inputs"]["image"] = input_depth_name
         prompt_request["9"]["inputs"]["filename_prefix"] = output_prefix
 
+        if diffusion_props.loras_available != "None":
+            prompt_request["3"]["inputs"]["model"] = ["2", 0]
+            prompt_request["2"]["inputs"]["lora_name"] = diffusion_props.loras_available
+            prompt_request["2"]["inputs"]["strength_model"] = diffusion_props.lora_scale
+            prompt_request["6"]["inputs"]["clip"] = ["2", 1]
+            prompt_request["7"]["inputs"]["clip"] = ["2", 1]
+
         if "flux" not in model_name:
 
             if diffusion_props.toggle_inpainting:
@@ -229,17 +236,7 @@ class SendRequestOperator(bpy.types.Operator):
                 ] = diffusion_props.denoising_strength
 
             if diffusion_props.loras_available != "None":
-                prompt_request["3"]["inputs"]["model"] = ["5", 0]
-                prompt_request["5"]["inputs"][
-                    "lora_name"
-                ] = diffusion_props.loras_available
-                prompt_request["5"]["inputs"][
-                    "strength_model"
-                ] = diffusion_props.lora_scale
-                prompt_request["6"]["inputs"]["clip"] = ["5", 1]
-                prompt_request["7"]["inputs"]["clip"] = ["5", 1]
-
-                prompt_request["22"]["inputs"]["model"] = ["5", 0]
+                prompt_request["22"]["inputs"]["model"] = ["2", 0]
 
             if diffusion_props.toggle_ipadapter:
                 # Update node to use IPAdapter model

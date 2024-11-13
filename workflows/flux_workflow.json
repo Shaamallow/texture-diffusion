@@ -1,4 +1,17 @@
 {
+  "2": {
+    "inputs": {
+      "lora_name": "",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": ["4", 0],
+      "clip": ["4", 1]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
   "3": {
     "inputs": {
       "seed": 42,
@@ -20,13 +33,6 @@
     },
     "class_type": "CheckpointLoaderSimple"
   },
-  "6": {
-    "inputs": {
-      "text": "POSITIVE PROMPT",
-      "clip": ["4", 1]
-    },
-    "class_type": "CLIPTextEncode"
-  },
   "5": {
     "inputs": {
       "guidance": 3.5,
@@ -34,12 +40,25 @@
     },
     "class_type": "FluxGuidance"
   },
+  "6": {
+    "inputs": {
+      "text": "POSITIVE PROMPT",
+      "clip": ["4", 1]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "POSITIVE PROMPT"
+    }
+  },
   "7": {
     "inputs": {
       "text": "",
       "clip": ["4", 1]
     },
-    "class_type": "CLIPTextEncode"
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "NEGATIVE PROMPT"
+    }
   },
   "8": {
     "inputs": {

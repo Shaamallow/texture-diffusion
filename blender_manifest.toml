@@ -7,7 +7,7 @@ tagline = "A blender interface to generate textures using diffusion models"
 maintainer = "Eyal Benaroche <eyal.benaroche@gmail.com>"
 type = "add-on"
 
-website = "https://shaamallow.com"
+website = "https://github.com/Shaamallow/texture-diffusion"
 tags = ["Render", "Scene"]
 
 blender_version_min = "4.2.0"
@@ -15,6 +15,11 @@ blender_version_min = "4.2.0"
 license = ["SPDX:AGPL-3.0-or-later"]
 copyright = [
   "2024 Eyal Benaroche",
+]
+
+# bundle pillow for windows
+wheels = [
+  "./wheels/pillow-11.0.0-cp311-cp311-win_amd64.whl",
 ]
 
 [permissions]

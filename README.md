@@ -85,34 +85,19 @@ To see **Texture Diffusion** in action, follow the instructions below. Video and
 
 You can generate textures from the current view by entering a prompt and selecting a mesh. The texture will take some time to be created depending on the power of your ComfyUI machine (either local or remote). In this video I'm using the [Flux-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) model from [Black-Forest Labs](https://blackforestlabs.ai/).
 
-<p align="center">
-    <video width="1000" height="567" controls>
-      <source src="./docs/assets/video/generation_demo.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-</p>
+![](./docs/assets/video/generation_demo.mp4)
 
 ### Inpainting
 
 As the texture is only from a single view, the projection doesn't look great from an other point of view. You can render a new texture from a different angle using the Image-to-Image workflow. Make sure to use the different toggles. Moreover, I'm using the IP-Adapter capabilities to make sure the textures looks like the 1st generation. Try to experiment a bit with the different parameters.
 
-<p align="center">
-    <video width="1000" height="567" controls>
-      <source src="./docs/assets/video/inpainting_demo.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-</p>
+![](./docs/assets/video/inpainting_demo.mp4)
 
 ### Post Processing
 
 If you want to edit small details by hand, edit the different masks to add feathering, blending... You can do so by vertex painting and texture painting. Make sure to select the right attributes !
 
-<div align="center">
-    <video width="1000" height="567" controls>
-      <source src="./docs/assets/video/painting_demo.mp4" type="video/mp4">
-      Your browser does not support the video tag.
-    </video>
-</div>
+![](./docs/assets/video/painting_demo.mp4)
 
 #### Key Features & Explanations:
 

@@ -174,6 +174,12 @@ class SendRequestOperator(bpy.types.Operator):
         input_inpainting_name = f"{self.uuid}_inpainting.png"
         input_mask_name = f"{self.uuid}_mask.png"
 
+        # Get History Item to save properties
+        history_item = self.get_history_item(context)
+        if history_item is None:
+            self.report({"ERROR"}, "History item not found")
+            return {"CANCELLED"}
+
         # Prepare Request
 
         model_name = diffusion_props.models_available
@@ -199,6 +205,7 @@ class SendRequestOperator(bpy.types.Operator):
         if diffusion_props.random_seed:
             seed = random.randint(1, 1000000)
             diffusion_props.seed = seed
+            history_item.seed = seed
 
         prompt_request["6"]["inputs"]["text"] = diffusion_props.prompt
         prompt_request["3"]["inputs"]["seed"] = seed

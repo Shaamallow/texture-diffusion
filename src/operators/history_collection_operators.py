@@ -20,6 +20,10 @@ def fetch_image(history_item):
     if history_item.fetching_attempts < 1:
         print(view_image_url)
 
+    assert bpy.context is not None
+    backend_props = bpy.context.scene.backend_properties
+    N_MAX = backend_props.timeout_retry
+
     try:
         params = {
             "filename": file_name,
@@ -33,6 +37,10 @@ def fetch_image(history_item):
         if response.status_code == 200:
             # Load the image from the response content
             print("Image fetched successfully")
+            history_item.received = True
+
+            backend_props.expected_completion = history_item.fetching_attempts
+
             image = Image.open(BytesIO(response.content))
 
             file_path = bpy.data.scenes["Scene"].render.filepath
@@ -53,8 +61,8 @@ def fetch_image(history_item):
             )
             history_item.fetching_attempts += 1
 
-            if history_item.fetching_attempts > 60:
-                print("Failed to retrieve image after 60 attempts")
+            if history_item.fetching_attempts > N_MAX:
+                print(f"Failed to retrieve image after {N_MAX} attempts")
                 return
             return 1.0
 
@@ -63,8 +71,8 @@ def fetch_image(history_item):
         print(f"Failed to retrieve image. Error: {e}")
         history_item.fetching_attempts += 1
 
-        if history_item.fetching_attempts > 60:
-            print("Failed to retrieve image after 60 attempts")
+        if history_item.fetching_attempts > N_MAX:
+            print(f"Failed to retrieve image after {N_MAX} attempts")
             return
 
         return 1.0

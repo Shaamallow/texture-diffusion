@@ -18,15 +18,20 @@ class BackendProperties(bpy.types.PropertyGroup):
         default="http://localhost:8188",
     )
 
-    show_token: bpy.props.BoolProperty(
-        name="Show API Token",
-        description="Toggle to show token",
-        default=False,
+    timeout_retry: bpy.props.IntProperty(
+        name="Timeout Retry",
+        description="Maximum number of retries (1 per second) to fetch the image before a timeout",
+        default=60,
+        min=1,
+        max=1000,
     )
 
-    token: bpy.props.StringProperty(
-        name="Token",
-        description="Token for the backend",
+    expected_completion: bpy.props.IntProperty(
+        name="Expected Completion",
+        description="Expected time in seconds to complete the image generation",
+        default=60,
+        min=1,
+        max=1000,
     )
 
     history_collection_name: bpy.props.StringProperty(

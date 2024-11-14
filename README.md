@@ -85,19 +85,19 @@ To see **Texture Diffusion** in action, follow the instructions below. Video and
 
 You can generate textures from the current view by entering a prompt and selecting a mesh. The texture will take some time to be created depending on the power of your ComfyUI machine (either local or remote). In this video I'm using the [Flux-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) model from [Black-Forest Labs](https://blackforestlabs.ai/).
 
-![](./docs/assets/video/generation_demo.mp4)
+https://github.com/user-attachments/assets/c138d784-2a25-45b1-88ec-e83f8163b71e
 
 ### Inpainting
 
 As the texture is only from a single view, the projection doesn't look great from an other point of view. You can render a new texture from a different angle using the Image-to-Image workflow. Make sure to use the different toggles. Moreover, I'm using the IP-Adapter capabilities to make sure the textures looks like the 1st generation. Try to experiment a bit with the different parameters.
 
-![](https://shaamallow.com/videos/generation_demo.mp4)
+https://github.com/user-attachments/assets/22b9e755-607c-4dca-8187-98091821755c
 
 ### Post Processing
 
 If you want to edit small details by hand, edit the different masks to add feathering, blending... You can do so by vertex painting and texture painting. Make sure to select the right attributes !
 
-![](./docs/assets/video/painting_demo.mp4)
+https://github.com/user-attachments/assets/29bacee9-5474-4bba-9a9c-8e33d1536458
 
 #### Key Features & Explanations:
 

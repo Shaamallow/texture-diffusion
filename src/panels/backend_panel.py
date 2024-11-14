@@ -16,10 +16,8 @@ class BackendPanel(bpy.types.Panel):
         layout.label(text="Backend Settings")
         layout.prop(backend_properties, "backend_availables")
         layout.prop(backend_properties, "url")
-        layout.prop(backend_properties, "show_token")
 
-        if backend_properties.show_token:
-            layout.prop(backend_properties, "token")
+        layout.prop(backend_properties, "timeout_retry")
 
 
 def register():

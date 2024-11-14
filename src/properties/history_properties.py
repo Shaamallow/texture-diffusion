@@ -13,6 +13,7 @@ class HistoryItem(bpy.types.PropertyGroup):
     url: bpy.props.StringProperty(name="Prompt")
     fetching_attempts: bpy.props.IntProperty(name="Seed")
     mesh: bpy.props.StringProperty(name="Mesh")
+    received: bpy.props.BoolProperty(name="Received", default=False)
 
 
 class HistoryProperties(bpy.types.PropertyGroup):

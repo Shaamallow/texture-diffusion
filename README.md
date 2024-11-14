@@ -91,7 +91,7 @@ You can generate textures from the current view by entering a prompt and selecti
 
 As the texture is only from a single view, the projection doesn't look great from an other point of view. You can render a new texture from a different angle using the Image-to-Image workflow. Make sure to use the different toggles. Moreover, I'm using the IP-Adapter capabilities to make sure the textures looks like the 1st generation. Try to experiment a bit with the different parameters.
 
-![](./docs/assets/video/inpainting_demo.mp4)
+![](https://shaamallow.com/videos/generation_demo.mp4)
 
 ### Post Processing
 

@@ -7,7 +7,7 @@ tagline = "A blender interface to generate textures using diffusion models"
 maintainer = "Eyal Benaroche <eyal.benaroche@gmail.com>"
 type = "add-on"
 
-website = "https://shaamallow.com"
+website = "https://github.com/Shaamallow/texture-diffusion"
 tags = ["Render", "Scene"]
 
 blender_version_min = "4.2.0"

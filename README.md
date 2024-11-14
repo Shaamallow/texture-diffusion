@@ -167,6 +167,26 @@ The following features are planned for future development:
 - [ ] **Texture Baking** – Implement baking to optimize UV projections.
 - [ ] **ComfyUI API Integration** – Create a standalone API to eliminate the need for Comfy installation (planned as a premium feature).
 
+## Contributing
+
+Feel free to submit PRs or open issues for bugs or feature requests. I'm always looking for ways to improve the add-on and make it more user-friendly. I've attached a excalidraw diagram that I made to better architect the project. Feel free to check the code and the diagram in `docs`.
+
+If you want to update the code, make sure to install the requirements with the following commands :
+
+### Python env
+
+I recommand using mamba
+
+```bash
+conda create -n texture-diffusion python=3.10
+```
+
+Then
+
+```bash
+pip install '.[dev]'
+```
+
 ## Credits
 
 - [Blender](https://www.blender.org/) – Core software for 3D modeling and rendering.

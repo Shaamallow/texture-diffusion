@@ -17,6 +17,11 @@ copyright = [
   "2024 Eyal Benaroche",
 ]
 
+# bundle pillow for windows
+wheels = [
+  "./wheels/pillow-11.0.0-cp311-cp311-win_amd64.whl",
+]
+
 [permissions]
 files = "Read/write Images from/to disk"
 network = "Need to send generation requests to backend"

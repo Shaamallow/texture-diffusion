@@ -81,6 +81,9 @@ Should work similar to Linux, but not tested.
 
 To see **Texture Diffusion** in action, follow the instructions below. Video and image examples are provided for each major feature to guide you through different capabilities.
 
+> [!CAUTION]
+> Make sure you have specified a Output Path before running the add-on on Windows `Properties > Output > Output > Path`
+
 ### Texture Generation
 
 You can generate textures from the current view by entering a prompt and selecting a mesh. The texture will take some time to be created depending on the power of your ComfyUI machine (either local or remote). In this video I'm using the [Flux-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) model from [Black-Forest Labs](https://blackforestlabs.ai/).

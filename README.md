@@ -82,7 +82,7 @@ Should work similar to Linux, but not tested.
 To see **Texture Diffusion** in action, follow the instructions below. Video and image examples are provided for each major feature to guide you through different capabilities.
 
 > [!CAUTION]
-> Make sure you have specified a Output Path before running the add-on on Windows `Properties > Output > Output > Path`
+> Make sure you have specified an Output Path before running the add-on on Windows `Properties > Output > Output > Path`
 
 ### Texture Generation
 

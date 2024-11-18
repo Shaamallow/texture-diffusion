@@ -56,7 +56,7 @@ This add-on is using [ComfyUI](https://github.com/comfyanonymous/ComfyUI) to run
 
 ### Windows
 
-1. Downdload the `zip` file [link](https://github.com/Shaamallow/texture-diffusion/archive/refs/tags/v1.0.0.zip)
+1. Downdload the `zip` file [link](https://github.com/Shaamallow/texture-diffusion/releases/latest)
 2. Ensure you have Blender version 4.2 or above installed
 3. Import the add-on into Blender via the `Edit > Preferences > Add-ons` menu
 

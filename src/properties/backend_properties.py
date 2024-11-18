@@ -15,7 +15,7 @@ class BackendProperties(bpy.types.PropertyGroup):
     url: bpy.props.StringProperty(
         name="URL",
         description="URL to access the backend",
-        default="http://localhost:8188",
+        default="http://127.0.0.1:8188",
     )
 
     timeout_retry: bpy.props.IntProperty(

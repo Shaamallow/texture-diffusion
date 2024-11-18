@@ -50,7 +50,9 @@ _If you like the project, you can star the project on GitHub or share it with yo
 
 This add-on is using [ComfyUI](https://github.com/comfyanonymous/ComfyUI) to run diffusion models (as it's a popular installation) you need to have ComfyUI installed and running on your machine for the add-on to work properly. Follow the Installation instructions first if it's not the case.
 
-> To Use IP-Adapter, you need to have installed [ComfyUI IPAdapter Plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus) extension to your ComfyUI installation. Make sure to do so before-hand as well
+> You need to have installed [ComfyUI IPAdapter Plus](https://github.com/cubiq/ComfyUI_IPAdapter_plus) extension to your ComfyUI installation. Make sure to do so before-hand as well (even if you are not using IPAdapters)
+
+> [!NOTE] The addon works using a depth ControlNet under the hood, you also need to make sure you have the right name for it. Default name is 'diffusers_depth_controlnet_pytorch_model.fp16.safetensors' for the SDXL model and 'flux-depth-controlnet-v3.safetensors' for flux models.
 
 ### Windows
 
@@ -165,10 +167,11 @@ The following features are planned for future development:
   - [ ] Extend single-object replacement to multi-object selection.
   - [ ] Toggle option for rendering entire scenes.
 - [ ] **Multi Projection Generation (Search grid trick for flux generation, it's very powerful)**
-  - [ ] Rework the current Camera workflow
+  - [ ] Rework the current Camera workflow (no camera collections, single camera to move, generate without getting out of camera view)
   - [ ] Allow for multiple view to be rendered at once to generate a grid for a given object (like sprites)
 - [ ] **Texture Projection** project the texture on the UV instead of the UV on the texture
 - [ ] **ComfyUI API Integration** – Create a standalone API to eliminate the need for Comfy installation (planned as a premium feature).
+- [ ] **Default Controlnet** Allow to use different depth controlnet (no default name, different providers...)
 
 ## Contributing
 

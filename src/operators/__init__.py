@@ -8,6 +8,10 @@ from .mesh_collection_operators import (
     mesh_collection_register,
     mesh_collection_unregister,
 )
+from .mesh_generation_operators import (
+    mesh_generation_register,
+    mesh_generation_unregister,
+)
 
 
 def register():
@@ -15,6 +19,7 @@ def register():
     generation_register()
     history_collection_register()
     image_render_register()
+    mesh_generation_register()
 
 
 def unregister():
@@ -22,3 +27,4 @@ def unregister():
     generation_unregister()
     history_collection_unregister()
     image_render_unregister()
+    mesh_generation_unregister()
